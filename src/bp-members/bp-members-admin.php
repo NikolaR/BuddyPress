@@ -129,9 +129,11 @@ class BP_Members_Admin {
 		$this->stats_metabox = new StdClass();
 
 		// BuddyPress edit user's profile args
-		$this->edit_profile_args = array( 'page' => 'bp-profile-edit' );
-		$this->edit_profile_url  = '';
-		$this->edit_url          = '';
+		$this->edit_profile_args          = array( 'page' => 'bp-profile-edit' );
+		$this->edit_profile_url           = '';
+		$this->edit_group_membership_args = array( 'page' => 'bp-group-membership-edit' );
+		$this->edit_group_membership_url  = '';
+		$this->edit_url                   = '';
 
 		// Data specific to signups
 		$this->users_page   = '';
@@ -372,8 +374,8 @@ class BP_Members_Admin {
 
 		// Setup the screen ID's
 		$this->screen_id = array(
-			$this->user_page    . '-user',
-			$this->user_profile . '-user'
+			$this->user_page             . '-user',
+			$this->user_profile          . '-user'
 		);
 
 		// Loop through new hooks and add method actions
@@ -382,8 +384,8 @@ class BP_Members_Admin {
 		}
 
 		// Add the profile_admin_head method to proper admin_head actions
-		add_action( "admin_head-{$this->user_page}", array( $this, 'profile_admin_head' ) );
-		add_action( "admin_head-profile.php",        array( $this, 'profile_admin_head' ) );
+		add_action( "admin_head-{$this->user_page}",             array( $this, 'profile_admin_head' ) );
+		add_action( "admin_head-profile.php",                    array( $this, 'profile_admin_head' ) );
 	}
 
 	/**
@@ -409,6 +411,18 @@ class BP_Members_Admin {
 			array( $this, 'user_admin' )
 		);
 
+		// Manage group membership
+		if ( bp_current_user_can( 'bp_moderate') ) {
+			$hooks['user_group_membership'] = $this->user_group_membership_page = add_submenu_page(
+				$this->user_profile . '.php',
+				__( 'Edit Group Membership',  'buddypress' ),
+				__( 'Edit Group Membership',  'buddypress' ),
+				'read',
+				'bp-group-membership-edit',
+				array( $this, 'user_group_membership' )
+			);
+		}
+
 		// Only show sign-ups where they belong
 		if ( ! is_multisite() || is_network_admin() ) {
 
@@ -431,16 +445,22 @@ class BP_Members_Admin {
 			$edit_page        . '.php',
 			$profile_page     . '.php',
 			$this->user_page,
-			$this->users_page . '.php',
+			$this->users_page . '.php'
 		);
+		if ( bp_current_user_can( 'bp_moderate') ) {
+			$page_head[] = $this->user_group_membership_page;
+		}
 
 		// Append '-network' to each array item if in network admin
 		if ( is_network_admin() ) {
-			$edit_page          .= '-network';
-			$profile_page       .= '-network';
-			$this->user_page    .= '-network';
-			$this->users_page   .= '-network';
-			$this->signups_page .= '-network';
+			$edit_page                   .= '-network';
+			$profile_page                .= '-network';
+			$this->user_page             .= '-network';
+			$this->users_page            .= '-network';
+			$this->signups_page          .= '-network';
+			if ( bp_current_user_can( 'bp_moderate') ) {
+				$this->user_group_membership_page .= '-network';
+			}
 		}
 
 		// Setup the screen ID's
@@ -449,6 +469,9 @@ class BP_Members_Admin {
 			$this->user_page,
 			$profile_page
 		);
+		if ( bp_current_user_can( 'bp_moderate') ) {
+			$this->screen_id[] = $this->user_group_membership_page;
+		}
 
 		// Loop through new hooks and add method actions
 		foreach ( $hooks as $key => $hook ) {
@@ -506,16 +529,19 @@ class BP_Members_Admin {
 		}
 
 		if ( is_user_admin() ) {
-			$this->edit_profile_url = add_query_arg( $this->edit_profile_args, user_admin_url( 'profile.php' ) );
-			$this->edit_url         = user_admin_url( 'profile.php' );
+			$this->edit_profile_url          = add_query_arg( $this->edit_profile_args,          user_admin_url( 'profile.php' ) );
+			$this->edit_group_membership_url = add_query_arg( $this->edit_group_membership_args, user_admin_url( 'profile.php' ) );
+			$this->edit_url                  = user_admin_url( 'profile.php' );
 
 		} elseif ( is_blog_admin() ) {
-			$this->edit_profile_url = add_query_arg( $this->edit_profile_args, admin_url( 'users.php' ) );
-			$this->edit_url         = admin_url( $edit_page );
+			$this->edit_profile_url          = add_query_arg( $this->edit_profile_args,          admin_url( 'users.php' ) );
+			$this->edit_group_membership_url = add_query_arg( $this->edit_group_membership_args, admin_url( 'users.php' ) );
+			$this->edit_url                  = admin_url( $edit_page );
 
 		} elseif ( is_network_admin() ) {
-			$this->edit_profile_url = add_query_arg( $this->edit_profile_args, network_admin_url( 'users.php' ) );
-			$this->edit_url         = network_admin_url( $edit_page );
+			$this->edit_profile_url          = add_query_arg( $this->edit_profile_args,          network_admin_url( 'users.php' ) );
+			$this->edit_group_membership_url = add_query_arg( $this->edit_group_membership_args, network_admin_url( 'users.php' ) );
+			$this->edit_url                  = network_admin_url( $edit_page );
 		}
 	}
 
@@ -532,6 +558,7 @@ class BP_Members_Admin {
 	public function admin_head() {
 		remove_submenu_page( 'users.php',   'bp-profile-edit' );
 		remove_submenu_page( 'profile.php', 'bp-profile-edit' );
+		remove_submenu_page( 'users.php',   'bp-group-membership-edit' );
 	}
 
 	/** Community Profile *****************************************************/
@@ -594,15 +621,22 @@ class BP_Members_Admin {
 			$query_args['wp_http_referer'] = urlencode( stripslashes_deep( $_REQUEST['wp_http_referer'] ) );
 		}
 
-		// Setup the two distinct "edit" URL's
-		$community_url = add_query_arg( $query_args, $this->edit_profile_url );
-		$wordpress_url = add_query_arg( $query_args, $this->edit_url         );
+		// Setup  distinct "edit" URL's (normal user page, group membership page, xprofile page)
+		$group_membership_url = add_query_arg( $query_args, $this->edit_group_membership_url );
+		$x_profile_url        = add_query_arg( $query_args, $this->edit_profile_url );
+		$wordpress_url        = add_query_arg( $query_args, $this->edit_url         );
 
-		$bp_active = false;
+		$bp_gm_active = false;
+		$bp_xp_active = false;
 		$wp_active = ' nav-tab-active';
-		if ( 'BuddyPress' === $active ) {
-			$bp_active = ' nav-tab-active';
-			$wp_active = false;
+		if ( 'bp-profile-edit' === $active ) {
+			$bp_xp_active = ' nav-tab-active';
+			$bp_gm_active = false;
+			$wp_active    = false;
+		} else if ( 'bp-group-membership-edit' === $active) {
+			$bp_xp_active = false;
+			$bp_gm_active = ' nav-tab-active';
+			$wp_active    = false;
 		} ?>
 
 		<h2 id="profile-nav" class="nav-tab-wrapper">
@@ -613,12 +647,14 @@ class BP_Members_Admin {
 			 * this check.
 			 */
 			if ( current_user_can( 'edit_user', $user->ID ) ) : ?>
-
 				<a class="nav-tab<?php echo esc_attr( $wp_active ); ?>" href="<?php echo esc_url( $wordpress_url );?>"><?php _e( 'Profile', 'buddypress' ); ?></a>
-
 			<?php endif; ?>
 
-			<a class="nav-tab<?php echo esc_attr( $bp_active ); ?>" href="<?php echo esc_url( $community_url );?>"><?php _e( 'Extended Profile', 'buddypress' ); ?></a>
+			<?php if ( bp_current_user_can( 'bp_moderate' ) ) : ?>
+				<a class="nav-tab<?php echo esc_attr( $bp_gm_active ); ?>" href="<?php echo esc_url( $group_membership_url );?>"><?php _e( 'Group Membership', 'buddypress' ); ?></a>
+			<?php endif; ?>
+
+			<a class="nav-tab<?php echo esc_attr( $bp_xp_active ); ?>" href="<?php echo esc_url( $x_profile_url );?>"><?php _e( 'Extended Profile', 'buddypress' ); ?></a>
 		</h2>
 
 		<?php
@@ -663,7 +699,7 @@ class BP_Members_Admin {
 		$allowed_actions = apply_filters( 'bp_members_admin_allowed_actions', array( 'update', 'delete_avatar', 'spam', 'ham' ) );
 
 		// Prepare the display of the Community Profile screen
-		if ( ! in_array( $doaction, $allowed_actions ) ) {
+		if ( ! in_array( $doaction, $allowed_actions ) ) {echo 'action not allowed';
 			add_screen_option( 'layout_columns', array( 'default' => 2, 'max' => 2, ) );
 
 			get_current_screen()->add_help_tab( array(
@@ -826,7 +862,7 @@ class BP_Members_Admin {
 
 			<?php if ( ! empty( $user ) ) :
 
-				$this->profile_nav( $user, 'BuddyPress' ); ?>
+				$this->profile_nav( $user, 'bp-profile-edit' ); ?>
 
 				<form action="<?php echo esc_url( $form_action_url ); ?>" id="your-profile" method="post">
 					<div id="poststuff">
@@ -861,6 +897,226 @@ class BP_Members_Admin {
 
 		</div><!-- .wrap -->
 		<?php
+	}
+
+	public function user_group_membership_admin_load(){
+		// Get the user ID
+		$user_id = $this->get_user_id();
+
+		// can current user edit this profile ?
+		if ( ! $this->member_can_edit( $user_id ) ) {
+			wp_die( __( 'You cannot edit the requested user.', 'buddypress' ) );
+		}
+
+		// Build redirection URL
+		$redirect_to = remove_query_arg( array( 'action', 'error', 'updated', 'spam', 'ham', 'delete_avatar' ), $_SERVER['REQUEST_URI'] );
+		$doaction    = ! empty( $_REQUEST['action'] ) ? $_REQUEST['action'] : false;
+
+		if ( ! empty( $_REQUEST['user_status'] ) ) {
+			$spam = (bool) ( 'spam' === $_REQUEST['user_status'] );
+
+			if ( $spam !== bp_is_user_spammer( $user_id ) ) {
+				$doaction = $_REQUEST['user_status'];
+			}
+		}
+
+		// Call an action for plugins to hook in early
+		do_action_ref_array( 'bp_members_admin_load', array( $doaction, $_REQUEST ) );
+
+		// Allowed actions
+		$allowed_actions = apply_filters( 'bp_members_admin_allowed_actions', array( 'update', 'delete_avatar', 'spam', 'ham' ) );
+
+		// Prepare the display of the Community Profile screen
+		if ( ! in_array( $doaction, $allowed_actions ) ) {
+			add_screen_option( 'layout_columns', array( 'default' => 2, 'max' => 2, ) );
+
+			get_current_screen()->add_help_tab( array(
+				'id'      => 'bp-group-membership-edit-overview',
+				'title'   => __( 'Overview', 'buddypress' ),
+				'content' =>
+					'<p>' . __( 'This is the admin view of groups user belongs to.', 'buddypress' ) . '</p>' .
+					'<p>' . __( 'You can add or remove user to and from groups.', 'buddypress' ) . '</p>'
+			) );
+
+			// Help panel - sidebar links
+			/*get_current_screen()->set_help_sidebar(
+				'<p><strong>' . __( 'For more information:', 'buddypress' ) . '</strong></p>' .
+				'<p>' . __( '<a href="http://codex.buddypress.org/buddypress-site-administration/managing-user-profiles/">Managing Profiles</a>', 'buddypress' ) . '</p>' .
+				'<p>' . __( '<a href="http://buddypress.org/support/">Support Forums</a>', 'buddypress' ) . '</p>'
+			);*/
+
+			/**
+			 * xProfile Hooks to load the profile fields if component is active
+			 * Plugins should not use this hook, please use 'bp_members_admin_user_metaboxes' instead
+			 */
+			//do_action_ref_array( 'bp_members_admin_xprofile_metabox', array( $user_id, get_current_screen()->id, $this->stats_metabox ) );
+
+			add_meta_box(
+				'bp_groups_user_groups_' . sanitize_key( bp_get_the_profile_group_slug() ),
+				esc_html( __( 'Member in following groups' ) ),
+				array( $this, 'user_current_groups' ),
+				get_current_screen()->id,
+				'normal',
+				'core'
+			);
+
+			add_meta_box(
+				'bp_groups_user_add_to_groups_' . sanitize_key( bp_get_the_profile_group_slug() ),
+				esc_html( __( 'Add user to groups' ) ),
+				array( $this, 'user_group_membership_add_to_groups' ),
+				get_current_screen()->id,
+				'normal',
+				'core'
+			);
+
+			add_meta_box(
+				'bp_groups_user_groups_save' . sanitize_key( bp_get_the_profile_group_slug() ),
+				esc_html( __( 'Save' ) ),
+				array( $this, 'user_group_membership_actions' ),
+				get_current_screen()->id,
+				'side',
+				'core'
+			);
+
+			// Enqueue javascripts
+			wp_enqueue_script( 'postbox'   );
+			wp_enqueue_script( 'dashboard' );
+
+			// Update other stuff once above ones are done
+		} else {
+			$this->redirect = $redirect_to;
+
+			// invoke group membership handler instead (if needed)
+			//do_action_ref_array( 'bp_members_admin_update_user', array( $doaction, $user_id, $_REQUEST, $this->redirect ) );
+
+			bp_core_redirect( $this->redirect );
+		}
+	}
+
+	public function user_current_groups(){
+		?>
+		<h4>currently in groups a, b, c</h4>
+		<?php
+	}
+
+	public function user_group_membership_add_to_groups(){
+		?>
+		<h4>type to add user to groups</h4>
+		<input type="text" placeholder="Start typing to get suggestions" />
+		<?php
+	}
+
+	public function user_group_membership_actions(){
+		?>
+		<input type="submit" name="save" id="save" class="button button-primary" value="Save Changes" tabindex="4">
+		<?php
+	}
+
+	/**
+	 * Display the user's group membership page.
+	 *
+	 * @access public
+	 * @since BuddyPress (2.1.0)
+	 */
+	public function user_group_membership() {
+		if ( ! bp_current_user_can( 'bp_moderate' ) && empty( $this->is_self_profile ) ) {
+			die( '-1' );
+		}
+
+		// Get the user ID
+		$user_id = $this->get_user_id();
+		$user    = get_user_to_edit( $user_id );
+
+		// Construct title
+		if ( true === $this->is_self_profile ) {
+			$title = __( 'Profile',   'buddypress' );
+		} else {
+			$title = __( 'Edit User', 'buddypress' );
+		}
+
+		// Construct URL for form
+		$request_url     = remove_query_arg( array( 'action', 'error', 'updated', 'spam', 'ham' ), $_SERVER['REQUEST_URI'] );
+		$form_action_url = add_query_arg( 'action', 'update', $request_url );
+		$wp_http_referer = false;
+		if ( ! empty( $_REQUEST['wp_http_referer'] ) ) {
+			$wp_http_referer = remove_query_arg( array( 'action', 'updated' ), $_REQUEST['wp_http_referer'] );
+		}
+
+		// Prepare notice for admin
+		$notice = $this->get_user_notice();
+
+		if ( ! empty( $notice ) ) : ?>
+
+			<div <?php if ( 'updated' === $notice['class'] ) : ?>id="message" <?php endif; ?>class="<?php echo esc_attr( $notice['class'] ); ?>">
+
+				<p><?php echo esc_html( $notice['message'] ); ?></p>
+
+				<?php if ( !empty( $wp_http_referer ) && ( 'updated' === $notice['class'] ) ) : ?>
+
+					<p><a href="<?php echo esc_url( $wp_http_referer ); ?>"><?php esc_html_e( '&larr; Back to Users', 'buddypress' ); ?></a></p>
+
+				<?php endif; ?>
+
+			</div>
+
+		<?php endif; ?>
+
+		<div class="wrap" id="community-profile-page">
+			<?php screen_icon( 'users' ); ?>
+			<h2><?php echo esc_html( $title ); ?>
+
+				<?php if ( empty( $this->is_self_profile ) ) : ?>
+
+					<?php if ( current_user_can( 'create_users' ) ) : ?>
+
+						<a href="user-new.php" class="add-new-h2"><?php echo esc_html_x( 'Add New', 'user', 'buddypress' ); ?></a>
+
+					<?php elseif ( is_multisite() && current_user_can( 'promote_users' ) ) : ?>
+
+						<a href="user-new.php" class="add-new-h2"><?php echo esc_html_x( 'Add Existing', 'user', 'buddypress' ); ?></a>
+
+					<?php endif; ?>
+
+				<?php endif; ?>
+			</h2>
+
+			<?php if ( ! empty( $user ) ) :
+
+				$this->profile_nav( $user, 'bp-group-membership-edit' ); ?>
+
+				<form action="<?php echo esc_url( $form_action_url ); ?>" id="your-profile" method="post">
+					<div id="poststuff">
+
+						<div id="post-body" class="metabox-holder columns-<?php echo 1 == get_current_screen()->get_columns() ? '1' : '2'; ?>">
+							<div id="post-body-content">
+							</div><!-- #post-body-content -->
+
+							<div id="postbox-container-1" class="postbox-container">
+								<?php do_meta_boxes( get_current_screen()->id, 'side', $user ); ?>
+							</div>
+
+							<div id="postbox-container-2" class="postbox-container">
+								<?php do_meta_boxes( get_current_screen()->id, 'normal',   $user ); ?>
+								<?php do_meta_boxes( get_current_screen()->id, 'advanced', $user ); ?>
+							</div>
+						</div><!-- #post-body -->
+
+					</div><!-- #poststuff -->
+
+					<?php wp_nonce_field( 'closedpostboxes', 'closedpostboxesnonce', false ); ?>
+					<?php wp_nonce_field( 'meta-box-order',  'meta-box-order-nonce', false ); ?>
+					<?php wp_nonce_field( 'edit-bp-profile_' . $user->ID ); ?>
+
+				</form>
+
+			<?php else : ?>
+
+				<p><?php printf( __( 'No user found with this ID. <a href="%s">Go back and try again</a>.', 'buddypress' ), esc_url( bp_get_admin_url( 'users.php' ) ) ); ?></p>
+
+			<?php endif; ?>
+
+		</div><!-- .wrap -->
+        <?php
 	}
 
 	/**
