@@ -1287,8 +1287,10 @@ class BP_Members_Admin {
 		if ( current_user_can( 'edit_user', $user->ID ) || bp_current_user_can( 'bp_moderate' ) ) {
 
 			// Add query args and setup the Extended link
-			$edit_profile      = add_query_arg( $args, $this->edit_profile_url );
-			$edit_profile_link = sprintf( '<a href="%1$s">%2$s</a>',  esc_url( $edit_profile ), esc_html__( 'Extended', 'buddypress' ) );
+			$edit_profile               = add_query_arg( $args, $this->edit_profile_url );
+			$edit_profile_link          = sprintf( '<a href="%1$s">%2$s</a>',  esc_url( $edit_profile ), esc_html__( 'Extended', 'buddypress' ) );
+			$edit_group_membership      = add_query_arg( $args, $this->edit_group_membership_url );
+			$edit_group_membership_link = sprintf( '<a href="%1$s">%2$s</a>',  esc_url( $edit_group_membership ), esc_html__( 'Groups', 'buddypress' ) );
 
 			/**
 			 * Check the edit action is available
@@ -1299,8 +1301,9 @@ class BP_Members_Admin {
 				unset( $actions['edit'] );
 
 				$new_edit_actions = array(
-					'edit'         => $edit_action,
-					'edit-profile' => $edit_profile_link,
+					'edit'                  => $edit_action,
+					'edit-profile'          => $edit_profile_link,
+					'edit-group-membership' => $edit_group_membership_link,
 				);
 
 			// If not available simply add the edit profile action
