@@ -1026,6 +1026,69 @@ function bp_groups_admin_autocomplete_handler() {
 add_action( 'wp_ajax_bp_group_admin_member_autocomplete', 'bp_groups_admin_autocomplete_handler' );
 
 /**
+ * Render metabox with users current groups
+ *
+ * @since BuddyPress (2.1.0)
+ */
+function bp_groups_admin_edit_user_current_groups(){
+	?>
+	<h4>currently in groups a, b, c, d</h4>
+	<?php
+}
+
+/**
+ * Render metabox content for adding user to new groups
+ *
+ * @since BuddyPress (2.1.0)
+ */
+function bp_groups_admin_edit_add_user_to_groups(){
+	?>
+	<h4>type to add user to groups</h4>
+	<input type="text" placeholder="Start typing to get suggestions" />
+	<?php
+}
+
+/**
+ * Add metaboxes for editing group membership on users profile page.
+ *
+ * @since BuddyPress (2.1.0)
+ *
+ * @param int $user_id ID of the user being edited
+ * @param string $screen_id ID of screen to which to metaboxes are added
+ */
+function bp_groups_admin_edit_metabox_single_user( $user_id, $screen_id ) {
+	add_meta_box(
+		'bp_groups_user_groups_' . $user_id,
+		esc_html( __( 'Member in following groups' ) ),
+		'bp_groups_admin_edit_user_current_groups',
+		$screen_id,
+		'normal',
+		'core'
+	);
+
+	add_meta_box(
+		'bp_groups_user_add_to_groups_' . $user_id,
+		esc_html( __( 'Add user to groups' ) ),
+		'bp_groups_admin_edit_add_user_to_groups',
+		$screen_id,
+		'normal',
+		'core'
+	);
+}
+
+/**
+ * Set admin related actions
+ *
+ * @since BuddyPress (2.1.0)
+ */
+function bp_groups_setup_actions() {
+	// Register the metabox in Member's community admin profile for editing group membership
+	add_action( 'bp_groups_admin_edit_metabox_single_user', 'bp_groups_admin_edit_metabox_single_user', 10, 2 );
+}
+// Load the group user admin
+add_action( 'bp_init', 'bp_groups_setup_actions' , 11 );
+
+/**
  * List table class for the Groups component admin page.
  *
  * @since BuddyPress (1.7.0)

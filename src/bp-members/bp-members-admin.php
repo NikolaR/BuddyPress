@@ -946,28 +946,9 @@ class BP_Members_Admin {
 			);*/
 
 			/**
-			 * xProfile Hooks to load the profile fields if component is active
-			 * Plugins should not use this hook, please use 'bp_members_admin_user_metaboxes' instead
+			 * Groups Hooks to render editor metaboxes
 			 */
-			//do_action_ref_array( 'bp_members_admin_xprofile_metabox', array( $user_id, get_current_screen()->id, $this->stats_metabox ) );
-
-			add_meta_box(
-				'bp_groups_user_groups_' . sanitize_key( bp_get_the_profile_group_slug() ),
-				esc_html( __( 'Member in following groups' ) ),
-				array( $this, 'user_current_groups' ),
-				get_current_screen()->id,
-				'normal',
-				'core'
-			);
-
-			add_meta_box(
-				'bp_groups_user_add_to_groups_' . sanitize_key( bp_get_the_profile_group_slug() ),
-				esc_html( __( 'Add user to groups' ) ),
-				array( $this, 'user_group_membership_add_to_groups' ),
-				get_current_screen()->id,
-				'normal',
-				'core'
-			);
+			do_action_ref_array( 'bp_groups_admin_edit_metabox_single_user', array( $user_id, get_current_screen()->id ) );
 
 			add_meta_box(
 				'bp_groups_user_groups_save' . sanitize_key( bp_get_the_profile_group_slug() ),
@@ -991,19 +972,6 @@ class BP_Members_Admin {
 
 			bp_core_redirect( $this->redirect );
 		}
-	}
-
-	public function user_current_groups(){
-		?>
-		<h4>currently in groups a, b, c</h4>
-		<?php
-	}
-
-	public function user_group_membership_add_to_groups(){
-		?>
-		<h4>type to add user to groups</h4>
-		<input type="text" placeholder="Start typing to get suggestions" />
-		<?php
 	}
 
 	public function user_group_membership_actions(){
