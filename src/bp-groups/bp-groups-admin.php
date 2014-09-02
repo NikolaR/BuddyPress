@@ -1052,12 +1052,12 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 	?>
 			<?php if ( !empty( $groups ) ) : ?>
 
-				<table class="widefat bp-group-members">
+				<table class="widefat bp-group-users-groups">
 					<thead>
 					<tr>
-						<th scope="col" class="uid-column"><?php _ex( 'ID', 'Group member user_id in group admin', 'buddypress' ); ?></th>
-						<th scope="col" class="uname-column"><?php _ex( 'Name', 'Group member name in group admin', 'buddypress' ); ?></th>
-						<th scope="col" class="urole-column"><?php _ex( 'Group Role', 'Group member role in group admin', 'buddypress' ); ?></th>
+						<th scope="col" class="gid-column"><?php _ex( 'ID', 'Group member user_id in group admin', 'buddypress' ); ?></th>
+						<th scope="col" class="gname-column"><?php _ex( 'Name', 'Group member name in group admin', 'buddypress' ); ?></th>
+						<th scope="col" class="grole-column"><?php _ex( 'Group Role', 'Group member role in group admin', 'buddypress' ); ?></th>
 					</tr>
 					</thead>
 
@@ -1066,15 +1066,15 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 					<?php foreach ( $groups as $group ) :
 						?>
 						<tr>
-							<th scope="row" class="uid-column"><?php echo esc_html( $group->id ); ?></th>
+							<th scope="row" class="gid-column"><?php echo esc_html( $group->id ); ?></th>
 
-							<td class="uname-column">
+							<td class="gname-column">
 								<a style="float: left;" href="<?php /*echo bp_core_get_user_domain( $group->ID );*/ ?>"><?php echo $avatars[ $group->id ]; ?></a>
 
 								<span style="margin: 8px; float: left;"><?php echo $content = sprintf( '<strong><a href="%s">%s</a></strong>', /*esc_url( $edit_url )*/'', $group->name ); ?></span>
 							</td>
 
-							<td class="urole-column">
+							<td class="grole-column">
 								<select class="bp-groups-role" id="bp-groups-role-<?php echo esc_attr( $group->id ); ?>" name="bp-groups-role[<?php echo esc_attr( $group->id ); ?>]">
 									<optgroup label="<?php esc_attr_e( 'Roles', 'buddypress' ); ?>">
 										<option class="admin"  value="admin"  <?php selected( 'admin',  $group->group_role ); ?>><?php esc_html_e( 'Administrator', 'buddypress' ); ?></option>
