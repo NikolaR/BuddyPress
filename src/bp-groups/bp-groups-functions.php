@@ -541,6 +541,49 @@ function groups_get_groups( $args = '' ) {
 	return apply_filters_ref_array( 'groups_get_groups', array( &$groups, &$r ) );
 }
 
+/**
+ * Get a collection of groups to which specified user belongs. Populate additional
+ * property for each group which states users group role (admin, mod, member, banned).
+ * Groups in which user is banned are included.
+ *
+ * @uses groups_get_groups() Get all groups where user belongs
+ * @param int $user_id ID of user for which to fetch groups
+ * @return array
+ */
+function groups_get_users_groups( $user_id ) {
+	global $wpdb;
+	$bp = buddypress();
+
+	$memberships = $wpdb->get_results(
+		$wpdb->prepare(
+			"SELECT group_id, is_admin, is_mod, is_banned FROM {$bp->groups->table_name_members} WHERE user_id = %d AND is_confirmed = 1",
+			$user_id
+		)
+	);
+
+	$group_ids = wp_list_pluck( $memberships, 'group_id' );
+	$groups = groups_get_groups( array( 'include' => $group_ids ) );
+
+	foreach ( $groups['groups'] as $group ) {
+		foreach ( $memberships as $membership ) {
+			if ( $membership->group_id == $group->id ) {
+				$role = 'member';
+				if ( $membership->is_admin ){
+					$role = 'admin';
+				} else if ( $membership->is_mod ) {
+					$role = 'mod';
+				} else if ( $membership->is_banned ) {
+					$role = 'banned';
+				}
+				$group->group_role = $role;
+				break;
+			}
+		}
+	}
+
+	return $groups;
+}
+
 function groups_get_total_group_count() {
 	if ( !$count = wp_cache_get( 'bp_total_group_count', 'bp' ) ) {
 		$count = BP_Groups_Group::get_total_group_count();

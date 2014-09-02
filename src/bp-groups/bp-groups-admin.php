@@ -1029,10 +1029,100 @@ add_action( 'wp_ajax_bp_group_admin_member_autocomplete', 'bp_groups_admin_autoc
  * Render metabox with users current groups
  *
  * @since BuddyPress (2.1.0)
+ *
+ * @param int $user_id ID of user for which to show groups
  */
-function bp_groups_admin_edit_user_current_groups(){
+function bp_groups_admin_edit_user_current_groups( $user_id ){
+	$groups = groups_get_users_groups( $user_id->ID );
+	$groups = $groups['groups'];
+
+	$fetch_avatar_args =  array(
+		'object' => 'group',
+		'width' => '32',
+		'height' => '32'
+	);
+
+	$avatars = array();
+	foreach ( $groups as $group ) {
+		$fetch_avatar_args['item_id'] = $group->id;
+		$fetch_avatar_args['alt'] = $group->name;
+		$avatars[ $group->id ] = bp_core_fetch_avatar( $fetch_avatar_args );
+	}
+
 	?>
-	<h4>currently in groups a, b, c, d</h4>
+			<?php if ( !empty( $groups ) ) : ?>
+
+				<table class="widefat bp-group-members">
+					<thead>
+					<tr>
+						<th scope="col" class="uid-column"><?php _ex( 'ID', 'Group member user_id in group admin', 'buddypress' ); ?></th>
+						<th scope="col" class="uname-column"><?php _ex( 'Name', 'Group member name in group admin', 'buddypress' ); ?></th>
+						<th scope="col" class="urole-column"><?php _ex( 'Group Role', 'Group member role in group admin', 'buddypress' ); ?></th>
+					</tr>
+					</thead>
+
+					<tbody>
+
+					<?php foreach ( $groups as $group ) :
+						?>
+						<tr>
+							<th scope="row" class="uid-column"><?php echo esc_html( $group->id ); ?></th>
+
+							<td class="uname-column">
+								<a style="float: left;" href="<?php /*echo bp_core_get_user_domain( $group->ID );*/ ?>"><?php echo $avatars[ $group->id ]; ?></a>
+
+								<span style="margin: 8px; float: left;"><?php echo $content = sprintf( '<strong><a href="%s">%s</a></strong>', /*esc_url( $edit_url )*/'', $group->name ); ?></span>
+							</td>
+
+							<td class="urole-column">
+								<select class="bp-groups-role" id="bp-groups-role-<?php echo esc_attr( $group->id ); ?>" name="bp-groups-role[<?php echo esc_attr( $group->id ); ?>]">
+									<optgroup label="<?php esc_attr_e( 'Roles', 'buddypress' ); ?>">
+										<option class="admin"  value="admin"  <?php selected( 'admin',  $group->group_role ); ?>><?php esc_html_e( 'Administrator', 'buddypress' ); ?></option>
+										<option class="mod"    value="mod"    <?php selected( 'mod',    $group->group_role ); ?>><?php esc_html_e( 'Moderator',     'buddypress' ); ?></option>
+										<option class="member" value="member" <?php selected( 'member', $group->group_role ); ?>><?php esc_html_e( 'Member',        'buddypress' ); ?></option>
+										<?php if ( 'banned' === $group->group_role ) : ?>
+											<option class="banned" value="banned" <?php selected( 'banned', $group->group_role ); ?>><?php esc_html_e( 'Banned',        'buddypress' ); ?></option>
+										<?php endif; ?>
+									</optgroup>
+									<optgroup label="<?php esc_attr_e( 'Actions', 'buddypress' ); ?>">
+										<option class="remove" value="remove"><?php esc_html_e( 'Remove', 'buddypress' ); ?></option>
+										<?php if ( 'banned' !== $group->group_role ) : ?>
+											<option class="banned" value="banned"><?php esc_html_e( 'Ban', 'buddypress' ); ?></option>
+										<?php endif; ?>
+									</optgroup>
+								</select>
+
+								<?php
+								/**
+								 * Store the current role for this user,
+								 * so we can easily detect changes.
+								 *
+								 * @todo remove this, and do database detection on save
+								 */
+								?>
+								<input type="hidden" name="bp-groups-existing-role[<?php echo esc_attr( $group->ID ); ?>]" value="<?php echo esc_attr( $group->group_role ); ?>" />
+							</td>
+						</tr>
+
+						<?php if ( has_filter( 'bp_groups_admin_manage_member_row' ) ) : ?>
+							<tr>
+								<td colspan="3">
+									<?php /*do_action( 'bp_groups_admin_manage_member_row', $type_user->ID, $item );*/ ?>
+								</td>
+							</tr>
+						<?php endif; ?>
+
+					<?php endforeach; ?>
+
+					</tbody>
+				</table>
+
+			<?php else : ?>
+
+				<p class="bp-groups-no-members description"><?php esc_html_e( 'User is not member of any group', 'buddypress' ); ?></p>
+
+			<?php endif; ?>
+
 	<?php
 }
 
@@ -1040,11 +1130,12 @@ function bp_groups_admin_edit_user_current_groups(){
  * Render metabox content for adding user to new groups
  *
  * @since BuddyPress (2.1.0)
+ *
+ * @param int $user_id ID of user for which to show group adding view
  */
-function bp_groups_admin_edit_add_user_to_groups(){
+function bp_groups_admin_edit_add_user_to_groups( $user_id ){
 	?>
-	<h4>type to add user to groups</h4>
-	<input type="text" placeholder="Start typing to get suggestions" />
+	<input type="text" placeholder="Start typing to get suggestions" style="width: 400px" />
 	<?php
 }
 
@@ -1063,7 +1154,8 @@ function bp_groups_admin_edit_metabox_single_user( $user_id, $screen_id ) {
 		'bp_groups_admin_edit_user_current_groups',
 		$screen_id,
 		'normal',
-		'core'
+		'core',
+		array( $user_id )
 	);
 
 	add_meta_box(
@@ -1072,7 +1164,8 @@ function bp_groups_admin_edit_metabox_single_user( $user_id, $screen_id ) {
 		'bp_groups_admin_edit_add_user_to_groups',
 		$screen_id,
 		'normal',
-		'core'
+		'core',
+		array( $user_id )
 	);
 }
 
