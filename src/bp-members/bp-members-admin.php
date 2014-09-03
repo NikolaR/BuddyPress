@@ -899,7 +899,12 @@ class BP_Members_Admin {
 		<?php
 	}
 
-	public function user_group_membership_admin_load(){
+	/**
+	 * Handle actions from user group membership admin area
+	 *
+	 * @since BuddyPress (2.1.0)
+	 */
+	public function user_group_membership_admin_load() {
 		// Get the user ID
 		$user_id = $this->get_user_id();
 
@@ -955,7 +960,12 @@ class BP_Members_Admin {
 		}
 	}
 
-	public function user_group_membership_actions(){
+	/**
+	 * Display actions for user group membership admin area.
+	 *
+	 * @since BuddyPress (2.1.0)
+	 */
+	public function user_group_membership_actions() {
 		?>
 		<input type="submit" name="save" id="save" class="button button-primary" value="Save Changes" tabindex="4">
 		<?php
