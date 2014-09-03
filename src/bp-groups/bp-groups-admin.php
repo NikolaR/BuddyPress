@@ -981,6 +981,27 @@ function bp_groups_admin_autocomplete_handler() {
 add_action( 'wp_ajax_bp_group_admin_member_autocomplete', 'bp_groups_admin_autocomplete_handler' );
 
 /**
+ * AJAX handler for group autocomplete requests.
+ *
+ * @since BuddyPress (1.7.0)
+ */
+function bp_groups_admin_autocomplete_group_handler() {
+	global $wpdb;
+
+	// Bail if user user shouldn't be here
+	if ( ! current_user_can( 'bp_moderate' )  ) {
+		wp_die( -1 );
+	}
+
+	$bp = buddypress();
+	$term_like = '%' . $wpdb->esc_like( $_REQUEST['term'] ) . '%';
+	$groups = $wpdb->get_results( $wpdb->prepare( "SELECT id, name, slug, description FROM {$bp->groups->table_name} WHERE name LIKE %s LIMIT 10", $term_like ) );
+
+	wp_die( json_encode( $groups ) );
+}
+add_action( 'wp_ajax_bp_group_admin_autocomplete_group', 'bp_groups_admin_autocomplete_group_handler' );
+
+/**
  * Render metabox with users current groups
  *
  * @since BuddyPress (2.1.0)
