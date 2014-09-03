@@ -282,53 +282,8 @@ function bp_groups_admin_load() {
 					$existing_role = isset( $_POST['bp-groups-existing-role'][$user_id] ) ? $_POST['bp-groups-existing-role'][$user_id] : '';
 
 					if ( $existing_role != $new_role ) {
-
-						switch ( $new_role ) {
-							case 'mod' :
-								// Admin to mod is a demotion. Demote to
-								// member, then fall through
-								if ( 'admin' == $existing_role ) {
-									groups_demote_member( $user_id, $group_id );
-								}
-
-							case 'admin' :
-								// If the user was banned, we must
-								// unban first
-								if ( 'banned' == $existing_role ) {
-									groups_unban_member( $user_id, $group_id );
-								}
-
-								// At this point, each existing_role
-								// is a member, so promote
-								$result = groups_promote_member( $user_id, $group_id, $new_role );
-
-								break;
-
-							case 'member' :
-
-								if ( 'admin' == $existing_role || 'mod' == $existing_role ) {
-									$result = groups_demote_member( $user_id, $group_id );
-								} else if ( 'banned' == $existing_role ) {
-									$result = groups_unban_member( $user_id, $group_id );
-								}
-
-								break;
-
-							case 'banned' :
-
-								$result = groups_ban_member( $user_id, $group_id );
-
-								break;
-
-							case 'remove' :
-
-								$result = groups_remove_member( $user_id, $group_id );
-
-								break;
-						}
-
 						// Store the success or failure
-						if ( $result ) {
+						if ( groups_update_user_role( $user_id, $group_id, $existing_role, $new_role ) ) {
 							$success_modified[] = $user_id;
 						} else {
 							$error_modified[]   = $user_id;
@@ -1100,7 +1055,7 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 								 * @todo remove this, and do database detection on save
 								 */
 								?>
-								<input type="hidden" name="bp-groups-existing-role[<?php echo esc_attr( $group->ID ); ?>]" value="<?php echo esc_attr( $group->group_role ); ?>" />
+								<input type="hidden" name="bp-groups-existing-role[<?php echo esc_attr( $group->id ); ?>]" value="<?php echo esc_attr( $group->group_role ); ?>" />
 							</td>
 						</tr>
 
@@ -1170,6 +1125,53 @@ function bp_groups_admin_edit_metabox_single_user( $user_id, $screen_id ) {
 }
 
 /**
+ *
+ * Handles updating of users roles within groups, and banning or removing the user.
+ *
+ * @since BuddyPress (2.1.0)
+ *
+ * @param string $doaction    Action requested from user. Checked to confirm membership needs updating
+ * @param int    $user_id     User who's membership is updated
+ * @param array  $request     Request parameters
+ * @param string $redirect_to Target URL after updating
+ */
+function bp_groups_update_user_membership( $doaction = '', $user_id = 0, $request = array(), $redirect_to = '' ) {
+
+	if ( 'update_users_group_membership' === $doaction && ! empty( $_POST['bp-groups-role'] ) && ! empty( $_POST['bp-groups-existing-role'] ) ) {
+
+		$success_new = array();
+		$error_new = array();
+		$success_modified = array();
+		$error_modified = array();
+		$error_modified_last_admin = array();
+
+		$new_group_roles = (array) $_POST['bp-groups-role'];
+		$current_group_roles = (array) $_POST['bp-groups-existing-role'];
+
+		check_admin_referer( 'edit-bp-profile_' . $user_id );
+
+		foreach ( $new_group_roles as $group_id => $new_role ) {
+			$current_role = $current_group_roles[ $group_id ];
+			// Ignore when there is no change
+			if ( $new_role === $current_role ) {
+				continue;
+			}
+
+			// Make sure that last admin in the group is not being demoted
+			if ( 'admin' === $new_role && groups_get_group_admins( $group_id ) < 2 ) {
+				$error_modified_last_admin[] = $group_id;
+			} else {
+				if ( groups_update_user_role( $user_id, $group_id, $current_role, $new_role ) ) {
+					$success_modified[] = $group_id;
+				} else {
+					$error_modified[] = $group_id;
+				}
+			}
+		}
+	}
+}
+
+/**
  * Set admin related actions
  *
  * @since BuddyPress (2.1.0)
@@ -1177,6 +1179,9 @@ function bp_groups_admin_edit_metabox_single_user( $user_id, $screen_id ) {
 function bp_groups_setup_actions() {
 	// Register the metabox in Member's community admin profile for editing group membership
 	add_action( 'bp_groups_admin_edit_metabox_single_user', 'bp_groups_admin_edit_metabox_single_user', 10, 2 );
+
+	// Register action which updates users group membership status
+	add_action( 'bp_members_admin_update_user',             'bp_groups_update_user_membership',         10, 4 );
 }
 // Load the group user admin
 add_action( 'bp_init', 'bp_groups_setup_actions' , 11 );

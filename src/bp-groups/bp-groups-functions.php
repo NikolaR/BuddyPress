@@ -964,6 +964,67 @@ function groups_unban_member( $user_id, $group_id ) {
 	return $member->unban();
 }
 
+/**
+ * Updates members role within a group she already belongs to.
+ * Valid $new_role values are: admin, mod, member, banned, remove.
+ *
+ * @since BuddyPress (2.1.0)
+ *
+ * @param int    $user_id      User who's group role to change.
+ * @param int    $group_id     Group to update role.
+ * @param string $current_role Users current role.
+ * @param string $new_role     Users new role.
+ * @return bool Success indicator.
+ */
+function groups_update_user_role( $user_id , $group_id , $current_role, $new_role ) {
+	$result = false;
+	switch ( $new_role ) {
+		case 'mod' :
+			// Admin to mod is a demotion. Demote to
+			// member, then fall through
+			if ( 'admin' == $current_role ) {
+				groups_demote_member( $user_id, $group_id );
+			}
+
+		case 'admin' :
+			// If the user was banned, we must
+			// unban first
+			if ( 'banned' == $current_role ) {
+				groups_unban_member( $user_id, $group_id );
+			}
+
+			// At this point, each existing_role
+			// is a member, so promote
+			$result = groups_promote_member( $user_id, $group_id, $new_role );
+
+			break;
+
+		case 'member' :
+
+			if ( 'admin' == $current_role || 'mod' == $current_role ) {
+				$result = groups_demote_member( $user_id, $group_id );
+			} else if ( 'banned' == $current_role ) {
+				$result = groups_unban_member( $user_id, $group_id );
+			}
+
+			break;
+
+		case 'banned' :
+
+			$result = groups_ban_member( $user_id, $group_id );
+
+			break;
+
+		case 'remove' :
+
+			$result = groups_remove_member( $user_id, $group_id );
+
+			break;
+	}
+
+	return $result;
+}
+
 /*** Group Removal *******************************************************/
 
 function groups_remove_member( $user_id, $group_id ) {

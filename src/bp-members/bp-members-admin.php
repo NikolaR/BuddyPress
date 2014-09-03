@@ -699,7 +699,7 @@ class BP_Members_Admin {
 		$allowed_actions = apply_filters( 'bp_members_admin_allowed_actions', array( 'update', 'delete_avatar', 'spam', 'ham' ) );
 
 		// Prepare the display of the Community Profile screen
-		if ( ! in_array( $doaction, $allowed_actions ) ) {echo 'action not allowed';
+		if ( ! in_array( $doaction, $allowed_actions ) ) {
 			add_screen_option( 'layout_columns', array( 'default' => 2, 'max' => 2, ) );
 
 			get_current_screen()->add_help_tab( array(
@@ -912,22 +912,11 @@ class BP_Members_Admin {
 		$redirect_to = remove_query_arg( array( 'action', 'error', 'updated', 'spam', 'ham', 'delete_avatar' ), $_SERVER['REQUEST_URI'] );
 		$doaction    = ! empty( $_REQUEST['action'] ) ? $_REQUEST['action'] : false;
 
-		if ( ! empty( $_REQUEST['user_status'] ) ) {
-			$spam = (bool) ( 'spam' === $_REQUEST['user_status'] );
-
-			if ( $spam !== bp_is_user_spammer( $user_id ) ) {
-				$doaction = $_REQUEST['user_status'];
-			}
-		}
-
-		// Call an action for plugins to hook in early
-		do_action_ref_array( 'bp_members_admin_load', array( $doaction, $_REQUEST ) );
-
 		// Allowed actions
 		$allowed_actions = apply_filters( 'bp_members_admin_allowed_actions', array( 'update', 'delete_avatar', 'spam', 'ham' ) );
 
 		// Prepare the display of the Community Profile screen
-		if ( ! in_array( $doaction, $allowed_actions ) ) {
+		if ( 'update_users_group_membership' !== $doaction ) {
 			add_screen_option( 'layout_columns', array( 'default' => 2, 'max' => 2, ) );
 
 			get_current_screen()->add_help_tab( array(
@@ -937,13 +926,6 @@ class BP_Members_Admin {
 					'<p>' . __( 'This is the admin view of groups user belongs to.', 'buddypress' ) . '</p>' .
 					'<p>' . __( 'You can add or remove user to and from groups.', 'buddypress' ) . '</p>'
 			) );
-
-			// Help panel - sidebar links
-			/*get_current_screen()->set_help_sidebar(
-				'<p><strong>' . __( 'For more information:', 'buddypress' ) . '</strong></p>' .
-				'<p>' . __( '<a href="http://codex.buddypress.org/buddypress-site-administration/managing-user-profiles/">Managing Profiles</a>', 'buddypress' ) . '</p>' .
-				'<p>' . __( '<a href="http://buddypress.org/support/">Support Forums</a>', 'buddypress' ) . '</p>'
-			);*/
 
 			/**
 			 * Groups Hooks to render editor metaboxes
@@ -967,8 +949,7 @@ class BP_Members_Admin {
 		} else {
 			$this->redirect = $redirect_to;
 
-			// invoke group membership handler instead (if needed)
-			//do_action_ref_array( 'bp_members_admin_update_user', array( $doaction, $user_id, $_REQUEST, $this->redirect ) );
+			do_action_ref_array( 'bp_members_admin_update_user', array( $doaction, $user_id, $_REQUEST, $this->redirect ) );
 
 			bp_core_redirect( $this->redirect );
 		}
@@ -1004,10 +985,10 @@ class BP_Members_Admin {
 
 		// Construct URL for form
 		$request_url     = remove_query_arg( array( 'action', 'error', 'updated', 'spam', 'ham' ), $_SERVER['REQUEST_URI'] );
-		$form_action_url = add_query_arg( 'action', 'update', $request_url );
+		$form_action_url = add_query_arg( 'action', 'update_users_group_membership', $request_url );
 		$wp_http_referer = false;
 		if ( ! empty( $_REQUEST['wp_http_referer'] ) ) {
-			$wp_http_referer = remove_query_arg( array( 'action', 'updated' ), $_REQUEST['wp_http_referer'] );
+			$wp_http_referer = remove_query_arg( array( 'action', 'updated_users_group_membership' ), $_REQUEST['wp_http_referer'] );
 		}
 
 		// Prepare notice for admin
