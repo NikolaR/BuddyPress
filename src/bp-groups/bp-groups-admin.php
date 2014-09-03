@@ -991,17 +991,18 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 	$groups = groups_get_users_groups( $user_id->ID );
 	$groups = $groups['groups'];
 
-	$fetch_avatar_args =  array(
-		'object' => 'group',
-		'width' => '32',
-		'height' => '32'
-	);
-
 	$avatars = array();
 	foreach ( $groups as $group ) {
-		$fetch_avatar_args['item_id'] = $group->id;
-		$fetch_avatar_args['alt'] = $group->name;
-		$avatars[ $group->id ] = bp_core_fetch_avatar( $fetch_avatar_args );
+		$avatars[ $group->id ] = bp_core_fetch_avatar( array(
+			'item_id'    => $group->id,
+			'object'     => 'group',
+			'type'       => 'thumb',
+			'avatar_dir' => 'group-avatars',
+			'alt'        => sprintf( __( 'Group logo of %s', 'buddypress' ), $group->name ),
+			'width'      => '32',
+			'height'     => '32',
+			'title'      => $group->name
+		) );
 	}
 
 	?>
