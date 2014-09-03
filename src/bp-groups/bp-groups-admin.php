@@ -1018,15 +1018,17 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 
 					<tbody>
 
-					<?php foreach ( $groups as $group ) :
+					<?php
+						foreach ( $groups as $group ) :
+							$edit_url = bp_get_admin_url( 'admin.php?page=bp-groups&amp;gid=' . $group->id . '&amp;action=edit' );
 						?>
 						<tr>
 							<th scope="row" class="gid-column"><?php echo esc_html( $group->id ); ?></th>
 
 							<td class="gname-column">
-								<a style="float: left;" href="<?php /*echo bp_core_get_user_domain( $group->ID );*/ ?>"><?php echo $avatars[ $group->id ]; ?></a>
+								<a style="float: left;" href="<?php esc_attr_e( $edit_url ); ?>"><?php echo $avatars[ $group->id ]; ?></a>
 
-								<span style="margin: 8px; float: left;"><?php echo $content = sprintf( '<strong><a href="%s">%s</a></strong>', /*esc_url( $edit_url )*/'', $group->name ); ?></span>
+								<span style="margin: 8px; float: left;"><?php echo $content = sprintf( '<strong><a href="%s">%s</a></strong>', esc_attr( $edit_url ), $group->name ); ?></span>
 							</td>
 
 							<td class="grole-column">
