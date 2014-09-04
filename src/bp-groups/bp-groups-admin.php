@@ -981,9 +981,9 @@ function bp_groups_admin_autocomplete_handler() {
 add_action( 'wp_ajax_bp_group_admin_member_autocomplete', 'bp_groups_admin_autocomplete_handler' );
 
 /**
- * AJAX handler for group autocomplete requests.
+ * AJAX handler providing group suggestions for a user.
  *
- * @since BuddyPress (1.7.0)
+ * @since BuddyPress (2.1.0)
  */
 function bp_groups_admin_autocomplete_group_handler() {
 	global $wpdb;
@@ -994,8 +994,12 @@ function bp_groups_admin_autocomplete_group_handler() {
 	}
 
 	$bp = buddypress();
-	$term_like = '%' . $wpdb->esc_like( $_REQUEST['term'] ) . '%';
-	$groups = $wpdb->get_results( $wpdb->prepare( "SELECT id, name, slug, description FROM {$bp->groups->table_name} WHERE name LIKE %s LIMIT 10", $term_like ) );
+
+	$users_groups      = groups_get_users_groups( $_REQUEST['user_id'] );
+	$users_group_ids   = wp_list_pluck( $users_groups['groups'], 'id' );
+	$sql_not_in_groups = '(' . implode( ',', $users_group_ids ) . ')';
+	$term_like         = '%' . $wpdb->esc_like( $_REQUEST['term'] ) . '%';
+	$groups = $wpdb->get_results( $wpdb->prepare( "SELECT id, name, slug, description FROM {$bp->groups->table_name} WHERE id NOT IN $sql_not_in_groups AND name LIKE %s LIMIT 10", $term_like ) );
 
 	wp_die( json_encode( $groups ) );
 }
