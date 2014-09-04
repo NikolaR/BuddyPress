@@ -1061,7 +1061,7 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 							</td>
 
 							<td class="grole-column">
-								<select class="bp-groups-role" id="bp-groups-role-<?php echo esc_attr( $group->id ); ?>" name="bp-groups-role[<?php echo esc_attr( $group->id ); ?>]">
+								<select class="bp-groups-role" id="bp-groups-role-<?php esc_attr_e( $group->id ); ?>" name="bp-groups-role[<?php esc_attr_e( $group->id ); ?>]">
 									<optgroup label="<?php esc_attr_e( 'Roles', 'buddypress' ); ?>">
 										<option class="admin"  value="admin"  <?php selected( 'admin',  $group->group_role ); ?>><?php esc_html_e( 'Administrator', 'buddypress' ); ?></option>
 										<option class="mod"    value="mod"    <?php selected( 'mod',    $group->group_role ); ?>><?php esc_html_e( 'Moderator',     'buddypress' ); ?></option>
@@ -1077,7 +1077,7 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 										<?php endif; ?>
 									</optgroup>
 								</select>
-
+								<a href="#" class="bp-groups-remove-group" data-group-id="<?php esc_attr_e( $group->id ) ?>">Remove</a>
 								<?php
 								/**
 								 * Store the current role for this user,
@@ -1143,7 +1143,6 @@ function bp_groups_admin_edit_add_user_to_groups( $user_id ){
 				<td class="gname-column">
 					<a style="float: left;" href="<?php esc_attr_e( '$edit_url' ); ?>"><?php echo '$avatars[ $group->id ];'; ?></a>
 					<span style="margin: 8px; float: left;"><strong><a href="%s">%s</a></strong></span>
-					<input type="hidden" name="bp-groups-slug[]" />
 				</td>
 				<td class="grole-column">
 					<select class="bp-groups-role" id="bp-groups-role" name="bp-groups-role[]">
@@ -1153,6 +1152,7 @@ function bp_groups_admin_edit_add_user_to_groups( $user_id ){
 							<option class="member" value="member" selected><?php esc_html_e( 'Member',        'buddypress' ); ?></option>
 						</optgroup>
 					</select>
+					<a href="#" class="bp-groups-remove-new-group" data-group-id="">Remove</a>
 				</td>
 			</tr>
 			<tr id="bp-member-no-new-groups">

@@ -10,26 +10,47 @@
 	$(document).ready( function() {
 		window.warn_on_leave = false;
 
-        /* Initialize autocomplete */
-        $( '#bp-member-new-group-search' ).autocomplete({
-            source:    get_group_suggestions,
-            delay:     500,
-            minLength: 2,
-            position:  ( 'undefined' !== typeof isRtl && isRtl ) ? { my: 'right top', at: 'right bottom', offset: '0, -1' } : { offset: '0, -1' },
-            open:      function() { $(this).addClass('open'); },
-            close:     function() { $(this).removeClass('open'); $(this).val(''); },
-            select:    function( event, ui ) { add_group_to_list( event, ui ); }
-        });
-
 		/* Initialize autocomplete */
-		$( '.bp-suggest-user' ).autocomplete({
-			source:    ajaxurl + '?action=bp_group_admin_member_autocomplete' + id,
+		$( '#bp-member-new-group-search' ).autocomplete( {
+			source:    get_group_suggestions,
 			delay:     500,
 			minLength: 2,
 			position:  ( 'undefined' !== typeof isRtl && isRtl ) ? { my: 'right top', at: 'right bottom', offset: '0, -1' } : { offset: '0, -1' },
 			open:      function() { $(this).addClass('open'); },
 			close:     function() { $(this).removeClass('open'); $(this).val(''); },
-			select:    function( event, ui ) { add_member_to_list( event, ui ); }
+			select:    function( event, ui ) { add_group_to_list( event, ui ); }
+		} );
+
+		$( '.bp-groups-remove-group' ).on( 'click', function ( e ) {
+			var group_id = $( e.target ).data( 'group-id' );
+			$( '.bp-group-users-groups #bp-groups-role-' + group_id )
+				.find( 'option' )
+					.removeAttr( 'selected' )
+				.end()
+				.find( 'option.remove' ).attr( 'selected', 'selected' );
+		} );
+
+		$( '#bp-member-new-groups-list' ).on( 'click', '.bp-groups-remove-new-group', function ( e ) {
+			var group_id = $( e.target ).data( 'group-id' );
+			var group_idx = new_groups.indexOf(group_id);
+			if ( group_idx >= 0 ) {
+				new_groups.splice( group_idx, 1 );
+			}
+			$(e.target )
+				.closest( 'tr' )
+				.remove();
+		} );
+
+
+		/* Initialize autocomplete */
+		$( '.bp-suggest-user' ).autocomplete({
+			source:	ajaxurl + '?action=bp_group_admin_member_autocomplete' + id,
+			delay:	 500,
+			minLength: 2,
+			position:  ( 'undefined' !== typeof isRtl && isRtl ) ? { my: 'right top', at: 'right bottom', offset: '0, -1' } : { offset: '0, -1' },
+			open:	  function() { $(this).addClass('open'); },
+			close:	 function() { $(this).removeClass('open'); $(this).val(''); },
+			select:	function( event, ui ) { add_member_to_list( event, ui ); }
 		});
 
 		/* Replace noscript placeholder */
@@ -69,47 +90,49 @@
 		};
 	});
 
-    var new_groups = [];
+	var new_groups = [];
 
-    function add_group_to_list( e, ui ) {
-        var group = ui.item,
-            groupRow = $( '#bp-member-new-group-template' ).clone();
+	function add_group_to_list( e, ui ) {
+		var group = ui.item,
+			groupRow = $( '#bp-member-new-group-template' ).clone();
 
-        new_groups.push( group.id );
-        groupRow
-            .attr( 'id', '')
-            .show()
-            .find( '.gid-column' )
-                .text( group.id )
-            .end()
-            .find( '.gname-column > a')
-                .attr( 'href', group.edit_url )
-                .html( group.avatar )
-            .end()
-            .find( '.gname-column > input[type=hidden]')
-                .val( group.id )
-            .end()
-            .find( '.gname-column > span a' )
-                .attr( 'href', group.edit_url )
-                .text( group.name )
-            .end();
-        $( '#bp-member-new-groups-list' ).append( groupRow );
-    }
+		new_groups.push( group.id );
+		groupRow
+			.attr( 'id', '')
+			.show()
+			.find( '.gid-column' )
+				.text( group.id )
+			.end()
+			.find( '.gname-column > a')
+				.attr( 'href', group.edit_url )
+				.html( group.avatar )
+			.end()
+			.find( '.gname-column > input[type=hidden]')
+				.val( group.id )
+			.end()
+			.find( '.gname-column > span a' )
+				.attr( 'href', group.edit_url )
+				.text( group.name )
+			.end()
+			.find( '.bp-groups-remove-new-group' )
+				.data( 'groupId', group.id );
+		$( '#bp-member-new-groups-list' ).append( groupRow );
+	}
 
-    function get_group_suggestions( req, resp ) {
-        var url = ajaxurl + '?action=bp_group_admin_autocomplete_group&user_id=' + 2
-            + '&term=' + encodeURIComponent( req.term );
-        $.ajax( {
-            url: url,
-            type: 'GET',
-            dataType: 'json',
-            success: function ( data ) {
-                var groups = data.filter( function ( g ) { return new_groups.indexOf( g.id ) < 0; } );
-                resp( groups );
-            },
-            error: function () {
-                resp();
-            }
-        } );
-    }
+	function get_group_suggestions( req, resp ) {
+		var url = ajaxurl + '?action=bp_group_admin_autocomplete_group&user_id=' + 2
+			+ '&term=' + encodeURIComponent( req.term );
+		$.ajax( {
+			url: url,
+			type: 'GET',
+			dataType: 'json',
+			success: function ( data ) {
+				var groups = data.filter( function ( g ) { return new_groups.indexOf( g.id ) < 0; } );
+				resp( groups );
+			},
+			error: function () {
+				resp();
+			}
+		} );
+	}
 })( jQuery );
