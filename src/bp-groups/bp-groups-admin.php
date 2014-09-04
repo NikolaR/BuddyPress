@@ -1145,7 +1145,7 @@ function bp_groups_admin_edit_add_user_to_groups( $user_id ){
 					<span style="margin: 8px; float: left;"><strong><a href="%s">%s</a></strong></span>
 				</td>
 				<td class="grole-column">
-					<select class="bp-groups-role" id="bp-groups-role" name="bp-groups-role[]">
+					<select class="bp-groups-new-role" <!--name="bp-groups-added-role[]"-->>
 						<optgroup label="<?php esc_attr_e( 'Roles', 'buddypress' ); ?>">
 							<option class="admin"  value="admin" ><?php esc_html_e( 'Administrator', 'buddypress' ); ?></option>
 							<option class="mod"    value="mod"   ><?php esc_html_e( 'Moderator',     'buddypress' ); ?></option>
@@ -1210,6 +1210,8 @@ function bp_groups_update_user_membership( $doaction = '', $user_id = 0, $reques
 
 	if ( 'update_users_group_membership' === $doaction && ! empty( $_POST['bp-groups-role'] ) && ! empty( $_POST['bp-groups-existing-role'] ) ) {
 
+		check_admin_referer( 'edit-bp-profile_' . $user_id );
+
 		$success_new = array();
 		$error_new = array();
 		$success_modified = array();
@@ -1218,8 +1220,6 @@ function bp_groups_update_user_membership( $doaction = '', $user_id = 0, $reques
 
 		$new_group_roles = (array) $_POST['bp-groups-role'];
 		$current_group_roles = (array) $_POST['bp-groups-existing-role'];
-
-		check_admin_referer( 'edit-bp-profile_' . $user_id );
 
 		foreach ( $new_group_roles as $group_id => $new_role ) {
 			$current_role = $current_group_roles[ $group_id ];
@@ -1239,6 +1239,19 @@ function bp_groups_update_user_membership( $doaction = '', $user_id = 0, $reques
 				}
 			}
 		}
+
+		$added_group_roles = (array) $_POST['bp-groups-added-role'];
+		foreach ( $added_group_roles as $group_id => $group_role ) {
+			if ( groups_join_group( $group_id, $user_id ) ) {
+				$success_new[] = $group_id;
+				if ( 'member' !== $group_role ) {
+					groups_update_user_role( $user_id, $group_id, 'member', $group_role );
+				}
+			} else {
+				$error_new[] = $group_id;
+			}
+		}
+
 	}
 }
 
