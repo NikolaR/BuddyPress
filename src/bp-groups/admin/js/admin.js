@@ -1,6 +1,7 @@
 /* global BP_Group_Admin, group_id, isRtl */
 
 (function($) {
+
 	function add_member_to_list( e, ui ) {
 		$('#bp-groups-new-members-list').append('<li data-login="' + ui.item.value + '"><a href="#" class="bp-groups-remove-new-member">x</a> ' + ui.item.label + '</li>');
 	}
@@ -8,6 +9,17 @@
 	var id = 'undefined' !== typeof group_id ? '&group_id=' + group_id : '';
 	$(document).ready( function() {
 		window.warn_on_leave = false;
+
+        /* Initialize autocomplete */
+        $( '#bp-member-new-group-search' ).autocomplete({
+            source:    get_group_suggestions,
+            delay:     500,
+            minLength: 2,
+            position:  ( 'undefined' !== typeof isRtl && isRtl ) ? { my: 'right top', at: 'right bottom', offset: '0, -1' } : { offset: '0, -1' },
+            open:      function() { $(this).addClass('open'); },
+            close:     function() { $(this).removeClass('open'); $(this).val(''); },
+            select:    function( event, ui ) { add_group_to_list( event, ui ); }
+        });
 
 		/* Initialize autocomplete */
 		$( '.bp-suggest-user' ).autocomplete({
@@ -56,4 +68,48 @@
 			}
 		};
 	});
-})(jQuery);
+
+    var new_groups = [];
+
+    function add_group_to_list( e, ui ) {
+        var group = ui.item,
+            groupRow = $( '#bp-member-new-group-template' ).clone();
+
+        new_groups.push( group.id );
+        groupRow
+            .attr( 'id', '')
+            .show()
+            .find( '.gid-column' )
+                .text( group.id )
+            .end()
+            .find( '.gname-column > a')
+                .attr( 'href', group.edit_url )
+                .html( group.avatar )
+            .end()
+            .find( '.gname-column > input[type=hidden]')
+                .val( group.id )
+            .end()
+            .find( '.gname-column > span a' )
+                .attr( 'href', group.edit_url )
+                .text( group.name )
+            .end();
+        $( '#bp-member-new-groups-list' ).append( groupRow );
+    }
+
+    function get_group_suggestions( req, resp ) {
+        var url = ajaxurl + '?action=bp_group_admin_autocomplete_group&user_id=' + 2
+            + '&term=' + encodeURIComponent( req.term );
+        $.ajax( {
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function ( data ) {
+                var groups = data.filter( function ( g ) { return new_groups.indexOf( g.id ) < 0; } );
+                resp( groups );
+            },
+            error: function () {
+                resp();
+            }
+        } );
+    }
+})( jQuery );

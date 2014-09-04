@@ -1001,7 +1001,20 @@ function bp_groups_admin_autocomplete_group_handler() {
 	$term_like         = '%' . $wpdb->esc_like( $_REQUEST['term'] ) . '%';
 	$groups = $wpdb->get_results( $wpdb->prepare( "SELECT id, name, slug, description FROM {$bp->groups->table_name} WHERE id NOT IN $sql_not_in_groups AND name LIKE %s LIMIT 10", $term_like ) );
 
-	wp_die( json_encode( $groups ) );
+	$result = array();
+	foreach ( $groups as $group ) {
+		$result[] = array(
+			"label" => $group->name,
+			"value" => $group->name,
+			"name" => $group->name,
+			"avatar" => "<img blabla />",
+			"id" => $group->id,
+			"edit_url" => "http://google.com"
+		);
+	}
+
+
+	wp_die( json_encode( $result ) );
 }
 add_action( 'wp_ajax_bp_group_admin_autocomplete_group', 'bp_groups_admin_autocomplete_group_handler' );
 
@@ -1117,8 +1130,48 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
  * @param int $user_id ID of user for which to show group adding view
  */
 function bp_groups_admin_edit_add_user_to_groups( $user_id ){
+
+	$bp = buddypress();
+	$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : 'min.';
+	wp_enqueue_script( 'bp_groups_admin_js', $bp->plugin_url . "bp-groups/admin/js/admin.{$min}js", array( 'jquery', 'wp-ajax-response', 'jquery-ui-autocomplete' ), bp_get_version(), true );
+
 	?>
-	<input type="text" placeholder="Start typing to get suggestions" style="width: 400px" />
+
+	<table class="widefat bp-group-users-groups">
+		<thead>
+		<tr>
+			<th scope="col" class="gid-column"><?php _ex( 'ID', 'Group member user_id in group admin', 'buddypress' ); ?></th>
+			<th scope="col" class="gname-column"><?php _ex( 'Name', 'Group member name in group admin', 'buddypress' ); ?></th>
+			<th scope="col" class="grole-column"><?php _ex( 'Group Role', 'Group member role in group admin', 'buddypress' ); ?></th>
+		</tr>
+		</thead>
+
+		<tbody id="bp-member-new-groups-list">
+
+			<tr id="bp-member-new-group-template" style="display: none">
+				<th scope="row" class="gid-column"></th>
+				<td class="gname-column">
+					<a style="float: left;" href="<?php esc_attr_e( '$edit_url' ); ?>"><?php echo '$avatars[ $group->id ];'; ?></a>
+					<span style="margin: 8px; float: left;"><strong><a href="%s">%s</a></strong></span>
+					<input type="hidden" name="bp-groups-slug[]" />
+				</td>
+				<td class="grole-column">
+					<select class="bp-groups-role" id="bp-groups-role" name="bp-groups-role[]">
+						<optgroup label="<?php esc_attr_e( 'Roles', 'buddypress' ); ?>">
+							<option class="admin"  value="admin" ><?php esc_html_e( 'Administrator', 'buddypress' ); ?></option>
+							<option class="mod"    value="mod"   ><?php esc_html_e( 'Moderator',     'buddypress' ); ?></option>
+							<option class="member" value="member" selected><?php esc_html_e( 'Member',        'buddypress' ); ?></option>
+						</optgroup>
+					</select>
+				</td>
+			</tr>
+			<tr id="bp-member-no-new-groups">
+				<td scope="row" class="gid-column" colspan="3">
+					<input id="bp-member-new-group-search" type="text" placeholder="Start typing to get suggestions" style="width: 100%" />
+				</td>
+			</tr>
+		</tbody>
+	</table>
 	<?php
 }
 
