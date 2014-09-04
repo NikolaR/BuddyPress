@@ -1212,13 +1212,13 @@ function bp_groups_update_user_membership( $doaction = '', $user_id = 0, $reques
 
 		check_admin_referer( 'edit-bp-profile_' . $user_id );
 
-		$success_new = array();
-		$error_new = array();
-		$success_modified = array();
-		$error_modified = array();
+		$success_new               = array();
+		$error_new                 = array();
+		$success_modified          = array();
+		$error_modified            = array();
 		$error_modified_last_admin = array();
 
-		$new_group_roles = (array) $_POST['bp-groups-role'];
+		$new_group_roles     = (array) $_POST['bp-groups-role'];
 		$current_group_roles = (array) $_POST['bp-groups-existing-role'];
 
 		foreach ( $new_group_roles as $group_id => $new_role ) {
