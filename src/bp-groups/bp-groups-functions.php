@@ -383,6 +383,40 @@ function groups_get_group_mods( $group_id ) {
 }
 
 /**
+ * Creates url to edit page of requested group
+ *
+ * @since BuddyPress (2.1.0)
+ *
+ * @param  int    $group_id Group to edit
+ * @return string Group edit url
+ */
+function groups_get_group_edit_url( $group_id ) {
+	return bp_get_admin_url( 'admin.php?page=bp-groups&amp;gid=' . urlencode( $group_id ) . '&amp;action=edit' );
+}
+
+/**
+ * Creates avatar image tag for requested group
+ *
+ * @since BuddyPress (2.1.0)
+ *
+ * @param  int    $group_id   Group for which to get avatar
+ * @param  string $group_name (optional) Group name used for alt tag and title
+ * @return string Avatar image tag HTML
+ */
+function groups_get_avatar_image( $group_id, $group_name = null ) {
+	return bp_core_fetch_avatar( array(
+		'item_id'    => $group_id,
+		'object'     => 'group',
+		'type'       => 'thumb',
+		'avatar_dir' => 'group-avatars',
+		'alt'        => ( $group_name ) ? sprintf( __( 'Group logo of %s', 'buddypress' ), $group_name ) : '',
+		'width'      => '32',
+		'height'     => '32',
+		'title'      => $group_name
+	) );
+}
+
+/**
  * Fetch the members of a group.
  *
  * Since BuddyPress 1.8, a procedural wrapper for BP_Group_Member_Query.

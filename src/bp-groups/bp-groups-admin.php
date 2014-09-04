@@ -1007,12 +1007,11 @@ function bp_groups_admin_autocomplete_group_handler() {
 			"label" => $group->name,
 			"value" => $group->name,
 			"name" => $group->name,
-			"avatar" => "<img blabla />",
+			"avatar" => groups_get_avatar_image( $group->id, $group->name ),
 			"id" => $group->id,
-			"edit_url" => "http://google.com"
+			"edit_url" => groups_get_group_edit_url( $group->id )
 		);
 	}
-
 
 	wp_die( json_encode( $result ) );
 }
@@ -1031,16 +1030,7 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 
 	$avatars = array();
 	foreach ( $groups as $group ) {
-		$avatars[ $group->id ] = bp_core_fetch_avatar( array(
-			'item_id'    => $group->id,
-			'object'     => 'group',
-			'type'       => 'thumb',
-			'avatar_dir' => 'group-avatars',
-			'alt'        => sprintf( __( 'Group logo of %s', 'buddypress' ), $group->name ),
-			'width'      => '32',
-			'height'     => '32',
-			'title'      => $group->name
-		) );
+		$avatars[ $group->id ] = groups_get_avatar_image( $group->id, $group->name );
 	}
 
 	?>
@@ -1059,7 +1049,7 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 
 					<?php
 						foreach ( $groups as $group ) :
-							$edit_url = bp_get_admin_url( 'admin.php?page=bp-groups&amp;gid=' . $group->id . '&amp;action=edit' );
+							$edit_url = groups_get_group_edit_url( $group->id );
 						?>
 						<tr>
 							<th scope="row" class="gid-column"><?php echo esc_html( $group->id ); ?></th>
@@ -1654,16 +1644,7 @@ class BP_Groups_List_Table extends WP_List_Table {
 		$avatar = '';
 
 		if ( buddypress()->avatar->show_avatars ) {
-			$avatar  = bp_core_fetch_avatar( array(
-				'item_id'    => $item['id'],
-				'object'     => 'group',
-				'type'       => 'thumb',
-				'avatar_dir' => 'group-avatars',
-				'alt'        => sprintf( __( 'Group logo of %s', 'buddypress' ), $group_name ),
-				'width'      => '32',
-				'height'     => '32',
-				'title'      => $group_name
-			) );
+			$avatar  = groups_get_avatar_image( $item['id'], $group_name );
 		}
 
 		$content = sprintf( '<strong><a href="%s">%s</a></strong>', esc_url( $edit_url ), $group_name );
