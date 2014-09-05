@@ -997,9 +997,12 @@ function bp_groups_admin_autocomplete_group_handler() {
 
 	$users_groups      = groups_get_users_groups( $_REQUEST['user_id'] );
 	$users_group_ids   = wp_list_pluck( $users_groups['groups'], 'id' );
-	$sql_not_in_groups = '(' . implode( ',', $users_group_ids ) . ')';
-	$term_like         = '%' . $wpdb->esc_like( $_REQUEST['term'] ) . '%';
-	$groups = $wpdb->get_results( $wpdb->prepare( "SELECT id, name, slug, description FROM {$bp->groups->table_name} WHERE id NOT IN $sql_not_in_groups AND name LIKE %s LIMIT 10", $term_like ) );
+	$sql = array( 'where' => array () );
+	if ( ! empty( $users_groups ) ) {
+		$sql['where'][] = 'id NOT IN (' . implode( ',', $users_group_ids ) . ')';
+	}
+	$sql['where'][] = $wpdb->prepare( 'name LIKE %s', '%' . $wpdb->esc_like( $_REQUEST['term'] ) . '%' );
+	$groups = $wpdb->get_results( "SELECT id, name, slug, description FROM {$bp->groups->table_name} WHERE " . implode( ' AND ', $sql['where'] ) . " LIMIT 10" );
 
 	$result = array();
 	foreach ( $groups as $group ) {
@@ -1124,6 +1127,10 @@ function bp_groups_admin_edit_add_user_to_groups( $user_id ){
 	$bp = buddypress();
 	$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : 'min.';
 	wp_enqueue_script( 'bp_groups_admin_js', $bp->plugin_url . "bp-groups/admin/js/admin.{$min}js", array( 'jquery', 'wp-ajax-response', 'jquery-ui-autocomplete' ), bp_get_version(), true );
+	wp_localize_script( 'bp_groups_admin_js', 'BP_Group_Admin', array(
+		'add_member_placeholder' => __( 'Start typing a username to add a new member.', 'buddypress' ),
+		'warn_on_leave'          => __( 'If you leave this page, you will lose any unsaved changes you have made to the group.', 'buddypress' ),
+	) );
 
 	?>
 
@@ -1208,50 +1215,56 @@ function bp_groups_admin_edit_metabox_single_user( $user_id, $screen_id ) {
  */
 function bp_groups_update_user_membership( $doaction = '', $user_id = 0, $request = array(), $redirect_to = '' ) {
 
-	if ( 'update_users_group_membership' === $doaction && ! empty( $_POST['bp-groups-role'] ) && ! empty( $_POST['bp-groups-existing-role'] ) ) {
+	if ( 'update_users_group_membership' === $doaction ) {
 
 		check_admin_referer( 'edit-bp-profile_' . $user_id );
 
-		$success_new               = array();
-		$error_new                 = array();
-		$success_modified          = array();
-		$error_modified            = array();
-		$error_modified_last_admin = array();
-
 		$new_group_roles     = (array) $_POST['bp-groups-role'];
 		$current_group_roles = (array) $_POST['bp-groups-existing-role'];
+		$added_group_roles   = (array) $_POST['bp-groups-added-role'];
 
-		foreach ( $new_group_roles as $group_id => $new_role ) {
-			$current_role = $current_group_roles[ $group_id ];
-			// Ignore when there is no change
-			if ( $new_role === $current_role ) {
-				continue;
-			}
+		if ( ! empty( $new_group_roles ) && ! empty( $current_group_roles ) ) {
+			$success_new               = array();
+			$error_new                 = array();
+			$success_modified          = array();
+			$error_modified            = array();
+			$error_modified_last_admin = array();
 
-			// Make sure that last admin in the group is not being demoted
-			if ( 'admin' === $new_role && groups_get_group_admins( $group_id ) < 2 ) {
-				$error_modified_last_admin[] = $group_id;
-			} else {
-				if ( groups_update_user_role( $user_id, $group_id, $current_role, $new_role ) ) {
-					$success_modified[] = $group_id;
+			$new_group_roles     = (array) $_POST['bp-groups-role'];
+			$current_group_roles = (array) $_POST['bp-groups-existing-role'];
+
+			foreach ( $new_group_roles as $group_id => $new_role ) {
+				$current_role = $current_group_roles[ $group_id ];
+				// Ignore when there is no change
+				if ( $new_role === $current_role ) {
+					continue;
+				}
+
+				// Make sure that last admin in the group is not being demoted
+				if ( 'admin' === $new_role && groups_get_group_admins( $group_id ) < 2 ) {
+					$error_modified_last_admin[] = $group_id;
 				} else {
-					$error_modified[] = $group_id;
+					if ( groups_update_user_role( $user_id, $group_id, $current_role, $new_role ) ) {
+						$success_modified[] = $group_id;
+					} else {
+						$error_modified[] = $group_id;
+					}
 				}
 			}
 		}
 
-		$added_group_roles = (array) $_POST['bp-groups-added-role'];
-		foreach ( $added_group_roles as $group_id => $group_role ) {
-			if ( groups_join_group( $group_id, $user_id ) ) {
-				$success_new[] = $group_id;
-				if ( 'member' !== $group_role ) {
-					groups_update_user_role( $user_id, $group_id, 'member', $group_role );
+		if ( ! empty( $added_group_roles ) ) {
+			foreach ( $added_group_roles as $group_id => $group_role ) {
+				if ( groups_join_group( $group_id, $user_id ) ) {
+					$success_new[] = $group_id;
+					if ( 'member' !== $group_role ) {
+						groups_update_user_role( $user_id, $group_id, 'member', $group_role );
+					}
+				} else {
+					$error_new[] = $group_id;
 				}
-			} else {
-				$error_new[] = $group_id;
 			}
 		}
-
 	}
 }
 
