@@ -1202,6 +1202,84 @@ function bp_groups_admin_edit_metabox_single_user( $user_id, $screen_id ) {
 	);
 }
 
+function bp_groups_admin_membership_update_get_user_notice( $notice ) {
+	$success_new               = (array) $_REQUEST['success_new'];
+	$error_new                 = (array) $_REQUEST['error_new'];
+	$success_modified          = (array) $_REQUEST['success_modified'];
+	$error_modified            = (array) $_REQUEST['error_modified'];
+	$error_modified_last_admin = (array) $_REQUEST['error_modified_last_admin'];
+
+	$affected_group_ids = array();
+	$affected_group_ids += $success_new + $error_new + $success_modified + $error_modified + $error_modified_last_admin;
+	$affected_group_ids = array_unique( $affected_group_ids );
+
+	if ( ! empty( $affected_group_ids ) ) {
+		$affected_groups = groups_get_groups( array( 'include' => $affected_group_ids ) );
+		$affected_groups = $affected_groups['groups'];
+
+		$success = true;
+		$message = array();
+		if ( ! empty( $error_modified_last_admin ) ) {
+			$groups = array_uintersect_assoc( $affected_groups, $error_modified_last_admin, function ( $g, $id ) {
+				return ( $g->id - $id );
+			} );
+			$groups = wp_list_pluck( $groups, 'name' );
+			$message[] = __( 'User is last administrator in following groups and cannot be removed: ', 'buddypress' ) . implode( ', ', $groups );
+			$success &= false;
+		}
+		if ( ! empty( $error_modified ) ) {
+			$groups = array_uintersect_assoc( $affected_groups, $error_modified, function ( $g, $id ) {
+				return ( $g->id - $id );
+			} );
+			$groups = wp_list_pluck( $groups, 'name' );
+			$message[] = __( 'Could not update membership in following groups: ', 'buddypress' ) . implode( ', ', $groups );
+			$success &= false;
+		}
+		if ( ! empty( $success_modified ) ) {
+			$groups = array_uintersect_assoc( $affected_groups, $success_modified, function ( $g, $id ) {
+				return ( $g->id - $id );
+			} );
+			$groups = wp_list_pluck( $groups, 'name' );
+			$message[] = __( 'Successfully updated membership in following groups: ', 'buddypress' ) . implode( ', ', $groups );
+		}
+		if ( ! empty( $error_new ) ) {
+			$groups = array_uintersect_assoc( $affected_groups, $error_new, function ( $g, $id ) {
+				return ( $g->id - $id );
+			} );
+			$groups = wp_list_pluck( $groups, 'name' );
+			$message[] = __( 'Could not add user to following groups: ', 'buddypress' ) . implode( ', ', $groups );
+			$success &= false;
+		}
+		if ( ! empty( $success_new ) ) {
+			$groups = array_uintersect_assoc( $affected_groups, $success_new, function ( $g, $id ) {
+				return ( $g->id - $id );
+			} );
+			$groups = wp_list_pluck( $groups, 'name' );
+			$message[] = __( 'Added users to following groups: ', 'buddypress' ) . implode( ', ', $groups );
+		}
+
+		$orig_success = true;
+		$orig_message = array();
+		if ( $notice ) {
+			$orig_success = $notice['updated'] ? true : false;
+			if ( is_string( $notice['message'] ) ) {
+				$orig_message[] = $notice['message'];
+			} else if ( is_array( $notice['message'] ) ) {
+				$orig_message = $notice['message'];
+			}
+		}
+		$success &= $orig_success;
+		$message = $orig_message + $message;
+		$notice = array(
+			'class'   => $success ? 'updated' : 'error',
+			'message' => $message
+		);
+
+		return $notice;
+	}
+}
+add_filter( 'bp_members_get_user_notice', 'bp_groups_admin_membership_update_get_user_notice' );
+
 /**
  *
  * Handles updating of users roles within groups, and banning or removing the user.
@@ -1223,13 +1301,13 @@ function bp_groups_update_user_membership( $doaction = '', $user_id = 0, $reques
 		$current_group_roles = (array) $_POST['bp-groups-existing-role'];
 		$added_group_roles   = (array) $_POST['bp-groups-added-role'];
 
-		if ( ! empty( $new_group_roles ) && ! empty( $current_group_roles ) ) {
-			$success_new               = array();
-			$error_new                 = array();
-			$success_modified          = array();
-			$error_modified            = array();
-			$error_modified_last_admin = array();
+		$success_new               = array();
+		$error_new                 = array();
+		$success_modified          = array();
+		$error_modified            = array();
+		$error_modified_last_admin = array();
 
+		if ( ! empty( $new_group_roles ) && ! empty( $current_group_roles ) ) {
 			$new_group_roles     = (array) $_POST['bp-groups-role'];
 			$current_group_roles = (array) $_POST['bp-groups-existing-role'];
 
@@ -1265,6 +1343,15 @@ function bp_groups_update_user_membership( $doaction = '', $user_id = 0, $reques
 				}
 			}
 		}
+
+		$redirect_to = add_query_arg( array(
+			'success_new'               => $success_new,
+			'error_new'                 => $error_new,
+			'success_modified'          => $success_modified,
+			'error_modified'            => $error_modified,
+			'error_modified_last_admin' => $error_modified_last_admin
+		), $redirect_to );
+		bp_core_redirect( $redirect_to );
 	}
 }
 

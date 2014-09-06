@@ -346,6 +346,8 @@ class BP_Members_Admin {
 			}
 		}
 
+		$notice = apply_filters( 'bp_members_get_user_notice', $notice );
+
 		return $notice;
 	}
 
@@ -829,7 +831,16 @@ class BP_Members_Admin {
 
 			<div <?php if ( 'updated' === $notice['class'] ) : ?>id="message" <?php endif; ?>class="<?php echo esc_attr( $notice['class'] ); ?>">
 
-				<p><?php echo esc_html( $notice['message'] ); ?></p>
+				<p>
+				<?php
+					if ( is_array( $notice['message'] ) ) {
+						foreach ( $notice['message'] as $m ) {
+							echo esc_html($m) . '</p><p>';
+						}
+					} else {
+						esc_html_e( $notice['message'] );
+					} ?>
+				</p>
 
 				<?php if ( !empty( $wp_http_referer ) && ( 'updated' === $notice['class'] ) ) : ?>
 
@@ -914,7 +925,7 @@ class BP_Members_Admin {
 		}
 
 		// Build redirection URL
-		$redirect_to = remove_query_arg( array( 'action', 'error', 'updated', 'spam', 'ham', 'delete_avatar' ), $_SERVER['REQUEST_URI'] );
+		$redirect_to = remove_query_arg( array( 'action', 'error', 'updated', 'spam', 'ham', 'delete_avatar', 'success_new', 'error_new', 'success_modified', 'error_modified', 'error_modified_last_admin' ), $_SERVER['REQUEST_URI'] );
 		$doaction    = ! empty( $_REQUEST['action'] ) ? $_REQUEST['action'] : false;
 
 		// Allowed actions
@@ -928,7 +939,7 @@ class BP_Members_Admin {
 				'id'      => 'bp-group-membership-edit-overview',
 				'title'   => __( 'Overview', 'buddypress' ),
 				'content' =>
-					'<p>' . __( 'This is the admin view of groups user belongs to.', 'buddypress' ) . '</p>' .
+					'<p>' . __( 'This is the admin view of groups user member of.', 'buddypress' ) . '</p>' .
 					'<p>' . __( 'You can add or remove user to and from groups.', 'buddypress' ) . '</p>'
 			) );
 
@@ -1008,7 +1019,16 @@ class BP_Members_Admin {
 
 			<div <?php if ( 'updated' === $notice['class'] ) : ?>id="message" <?php endif; ?>class="<?php echo esc_attr( $notice['class'] ); ?>">
 
-				<p><?php echo esc_html( $notice['message'] ); ?></p>
+				<p>
+					<?php
+					if ( is_array( $notice['message'] ) ) {
+						foreach ( $notice['message'] as $m ) {
+							echo esc_html($m) . '</p><p>';
+						}
+					} else {
+						esc_html_e( $notice['message'] );
+					} ?>
+				</p>
 
 				<?php if ( !empty( $wp_http_referer ) && ( 'updated' === $notice['class'] ) ) : ?>
 
