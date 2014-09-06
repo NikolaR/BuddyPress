@@ -1181,6 +1181,8 @@ function bp_groups_admin_edit_add_user_to_groups( $user_id ){
  * @param string $screen_id ID of screen to which to metaboxes are added
  */
 function bp_groups_admin_edit_metabox_single_user( $user_id, $screen_id ) {
+	echo '<script type="text/javascript">var user_id = "' . esc_js( $user_id ) . '";</script>';
+
 	add_meta_box(
 		'bp_groups_user_groups_' . $user_id,
 		esc_html( __( 'Member in following groups' ) ),
@@ -1224,7 +1226,7 @@ function bp_groups_admin_membership_update_get_user_notice( $notice ) {
 				return ( $g->id - $id );
 			} );
 			$groups = wp_list_pluck( $groups, 'name' );
-			$message[] = __( 'User is last administrator in following groups and cannot be removed: ', 'buddypress' ) . implode( ', ', $groups );
+			$message[] = __( 'Cannot remove all administrators from groups: ', 'buddypress' ) . implode( ', ', $groups );
 			$success &= false;
 		}
 		if ( ! empty( $error_modified ) ) {

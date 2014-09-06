@@ -120,7 +120,7 @@
 	}
 
 	function get_group_suggestions( req, resp ) {
-		var url = ajaxurl + '?action=bp_group_admin_autocomplete_group&user_id=' + 2
+		var url = ajaxurl + '?action=bp_group_admin_autocomplete_group&user_id=' + encodeURIComponent( user_id )
 			+ '&term=' + encodeURIComponent( req.term );
 		$.ajax( {
 			url: url,
