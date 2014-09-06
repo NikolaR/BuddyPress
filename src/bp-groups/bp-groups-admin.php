@@ -1321,7 +1321,7 @@ function bp_groups_update_user_membership( $doaction = '', $user_id = 0, $reques
 				}
 
 				// Make sure that last admin in the group is not being demoted
-				if ( 'admin' === $new_role && groups_get_group_admins( $group_id ) < 2 ) {
+				if ( 'admin' === $current_role && count( groups_get_group_admins( $group_id ) ) < 2 ) {
 					$error_modified_last_admin[] = $group_id;
 				} else {
 					if ( groups_update_user_role( $user_id, $group_id, $current_role, $new_role ) ) {
