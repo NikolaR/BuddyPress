@@ -674,6 +674,28 @@ function bp_group_avatar_mini( $group = false ) {
 		) );
 	}
 
+/**
+ * Creates avatar image tag for requested group
+ *
+ * @since BuddyPress (2.1.0)
+ *
+ * @param  int    $group_id   Group for which to get avatar
+ * @param  string $group_name (optional) Group name used for alt tag and title
+ * @return string Avatar image tag HTML
+ */
+function bp_get_group_avatar_thumb_by_id( $group_id, $group_name = null ) {
+	return bp_core_fetch_avatar( array(
+		'item_id'    => $group_id,
+		'object'     => 'group',
+		'type'       => 'thumb',
+		'avatar_dir' => 'group-avatars',
+		'alt'        => ( $group_name ) ? sprintf( __( 'Group logo of %s', 'buddypress' ), $group_name ) : '',
+		'width'      => '32',
+		'height'     => '32',
+		'title'      => $group_name
+	) );
+}
+
 function bp_group_last_active( $group = false ) {
 	echo bp_get_group_last_active( $group );
 }

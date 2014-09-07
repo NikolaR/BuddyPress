@@ -1010,7 +1010,7 @@ function bp_groups_admin_autocomplete_group_handler() {
 			"label" => $group->name,
 			"value" => $group->name,
 			"name" => $group->name,
-			"avatar" => groups_get_avatar_image( $group->id, $group->name ),
+			"avatar" => bp_get_group_avatar_thumb_by_id( $group->id, $group->name ),
 			"id" => $group->id,
 			"edit_url" => groups_get_group_edit_url( $group->id )
 		);
@@ -1033,7 +1033,7 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 
 	$avatars = array();
 	foreach ( $groups as $group ) {
-		$avatars[ $group->id ] = groups_get_avatar_image( $group->id, $group->name );
+		$avatars[ $group->id ] = bp_get_group_avatar_thumb_by_id( $group->id, $group->name );
 	}
 
 	?>
@@ -1744,7 +1744,7 @@ class BP_Groups_List_Table extends WP_List_Table {
 		$avatar = '';
 
 		if ( buddypress()->avatar->show_avatars ) {
-			$avatar  = groups_get_avatar_image( $item['id'], $group_name );
+			$avatar  = bp_get_group_avatar_thumb_by_id( $item['id'], $group_name );
 		}
 
 		$content = sprintf( '<strong><a href="%s">%s</a></strong>', esc_url( $edit_url ), $group_name );

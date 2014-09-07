@@ -395,28 +395,6 @@ function groups_get_group_edit_url( $group_id ) {
 }
 
 /**
- * Creates avatar image tag for requested group
- *
- * @since BuddyPress (2.1.0)
- *
- * @param  int    $group_id   Group for which to get avatar
- * @param  string $group_name (optional) Group name used for alt tag and title
- * @return string Avatar image tag HTML
- */
-function groups_get_avatar_image( $group_id, $group_name = null ) {
-	return bp_core_fetch_avatar( array(
-		'item_id'    => $group_id,
-		'object'     => 'group',
-		'type'       => 'thumb',
-		'avatar_dir' => 'group-avatars',
-		'alt'        => ( $group_name ) ? sprintf( __( 'Group logo of %s', 'buddypress' ), $group_name ) : '',
-		'width'      => '32',
-		'height'     => '32',
-		'title'      => $group_name
-	) );
-}
-
-/**
  * Fetch the members of a group.
  *
  * Since BuddyPress 1.8, a procedural wrapper for BP_Group_Member_Query.
