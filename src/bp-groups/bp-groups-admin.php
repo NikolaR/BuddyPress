@@ -1042,7 +1042,7 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 				<table class="widefat bp-group-users-groups">
 					<thead>
 					<tr>
-						<th scope="col" class="gid-column"><?php _ex( 'ID', 'Users group user_id in user membership admin', 'buddypress' ); ?></th>
+						<th scope="col" class="gid-column"><?php _ex( 'ID', 'Users group group_id in user membership admin', 'buddypress' ); ?></th>
 						<th scope="col" class="gname-column"><?php _ex( 'Name', 'Users group name in user membership admin', 'buddypress' ); ?></th>
 						<th scope="col" class="grole-column"><?php _ex( 'Role', 'Group member role in user membership admin', 'buddypress' ); ?></th>
 					</tr>
