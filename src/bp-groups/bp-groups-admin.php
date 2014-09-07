@@ -1093,14 +1093,6 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 							</td>
 						</tr>
 
-						<?php if ( has_filter( 'bp_groups_admin_manage_member_row' ) ) : ?>
-							<tr>
-								<td colspan="3">
-									<?php /*do_action( 'bp_groups_admin_manage_member_row', $type_user->ID, $item );*/ ?>
-								</td>
-							</tr>
-						<?php endif; ?>
-
 					<?php endforeach; ?>
 
 					</tbody>
