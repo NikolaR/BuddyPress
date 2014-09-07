@@ -928,9 +928,6 @@ class BP_Members_Admin {
 		$redirect_to = remove_query_arg( array( 'action', 'error', 'updated', 'spam', 'ham', 'delete_avatar', 'success_new', 'error_new', 'success_modified', 'error_modified', 'error_modified_last_admin' ), $_SERVER['REQUEST_URI'] );
 		$doaction    = ! empty( $_REQUEST['action'] ) ? $_REQUEST['action'] : false;
 
-		// Allowed actions
-		$allowed_actions = apply_filters( 'bp_members_admin_allowed_actions', array( 'update', 'delete_avatar', 'spam', 'ham' ) );
-
 		// Prepare the display of the Community Profile screen
 		if ( 'update_users_group_membership' !== $doaction ) {
 			add_screen_option( 'layout_columns', array( 'default' => 2, 'max' => 2, ) );
