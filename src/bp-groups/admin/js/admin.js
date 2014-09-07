@@ -54,7 +54,8 @@
 		});
 
 		/* Replace noscript placeholder */
-		$( '#bp-groups-new-members' ).prop( 'placeholder', BP_Group_Admin.add_member_placeholder );
+		$( '#bp-groups-new-members'      ).prop( 'placeholder', BP_Group_Admin.add_member_placeholder );
+		$( '#bp-member-new-group-search' ).prop( 'placeholder', BP_Group_Admin.add_group_search_placeholder );
 
 		/* Remove a member on 'x' click */
 		$( '#bp_group_add_members' ).on( 'click', '.bp-groups-remove-new-member', function( e ) {

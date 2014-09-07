@@ -950,7 +950,7 @@ class BP_Members_Admin {
 
 			add_meta_box(
 				'bp_groups_user_groups_save' . sanitize_key( bp_get_the_profile_group_slug() ),
-				esc_html( __( 'Save' ) ),
+				esc_html( __( 'Save', 'buddypress' ) ),
 				array( $this, 'user_group_membership_actions' ),
 				get_current_screen()->id,
 				'side',
@@ -978,7 +978,7 @@ class BP_Members_Admin {
 	 */
 	public function user_group_membership_actions() {
 		?>
-		<input type="submit" name="save" id="save" class="button button-primary" value="Save Changes" tabindex="4">
+		<input type="submit" name="save" id="save" class="button button-primary" value="<?php echo __( 'Save Changes', 'buddypress' ); ?>" tabindex="4">
 		<?php
 	}
 

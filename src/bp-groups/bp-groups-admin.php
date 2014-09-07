@@ -1042,9 +1042,9 @@ function bp_groups_admin_edit_user_current_groups( $user_id ){
 				<table class="widefat bp-group-users-groups">
 					<thead>
 					<tr>
-						<th scope="col" class="gid-column"><?php _ex( 'ID', 'Group member user_id in group admin', 'buddypress' ); ?></th>
-						<th scope="col" class="gname-column"><?php _ex( 'Name', 'Group member name in group admin', 'buddypress' ); ?></th>
-						<th scope="col" class="grole-column"><?php _ex( 'Group Role', 'Group member role in group admin', 'buddypress' ); ?></th>
+						<th scope="col" class="gid-column"><?php _ex( 'ID', 'Users group user_id in user membership admin', 'buddypress' ); ?></th>
+						<th scope="col" class="gname-column"><?php _ex( 'Name', 'Users group name in user membership admin', 'buddypress' ); ?></th>
+						<th scope="col" class="grole-column"><?php _ex( 'Role', 'Group member role in user membership admin', 'buddypress' ); ?></th>
 					</tr>
 					</thead>
 
@@ -1128,8 +1128,9 @@ function bp_groups_admin_edit_add_user_to_groups( $user_id ){
 	$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : 'min.';
 	wp_enqueue_script( 'bp_groups_admin_js', $bp->plugin_url . "bp-groups/admin/js/admin.{$min}js", array( 'jquery', 'wp-ajax-response', 'jquery-ui-autocomplete' ), bp_get_version(), true );
 	wp_localize_script( 'bp_groups_admin_js', 'BP_Group_Admin', array(
-		'add_member_placeholder' => __( 'Start typing a username to add a new member.', 'buddypress' ),
-		'warn_on_leave'          => __( 'If you leave this page, you will lose any unsaved changes you have made to the group.', 'buddypress' ),
+		'add_member_placeholder'       => __( 'Start typing a username to add a new member.', 'buddypress' ),
+		'add_group_search_placeholder' => __( 'Start typing to get group suggestions.', 'buddypress' ),
+		'warn_on_leave'                => __( 'If you leave this page, you will lose any unsaved changes you have made to the group.', 'buddypress' ),
 	) );
 
 	?>
@@ -1137,8 +1138,8 @@ function bp_groups_admin_edit_add_user_to_groups( $user_id ){
 	<table class="widefat bp-group-users-groups">
 		<thead>
 		<tr>
-			<th scope="col" class="gid-column"><?php _ex( 'ID', 'Group member user_id in group admin', 'buddypress' ); ?></th>
-			<th scope="col" class="gname-column"><?php _ex( 'Name', 'Group member name in group admin', 'buddypress' ); ?></th>
+			<th scope="col" class="gid-column"><?php   _ex( 'ID', 'Group member user_id in group admin',      'buddypress' ); ?></th>
+			<th scope="col" class="gname-column"><?php _ex( 'Name', 'Group member name in group admin',       'buddypress' ); ?></th>
 			<th scope="col" class="grole-column"><?php _ex( 'Group Role', 'Group member role in group admin', 'buddypress' ); ?></th>
 		</tr>
 		</thead>
@@ -1148,23 +1149,23 @@ function bp_groups_admin_edit_add_user_to_groups( $user_id ){
 			<tr id="bp-member-new-group-template" style="display: none">
 				<th scope="row" class="gid-column"></th>
 				<td class="gname-column">
-					<a style="float: left;" href="<?php esc_attr_e( '$edit_url' ); ?>"><?php echo '$avatars[ $group->id ];'; ?></a>
+					<a style="float: left;" href=""></a>
 					<span style="margin: 8px; float: left;"><strong><a href="%s">%s</a></strong></span>
 				</td>
 				<td class="grole-column">
-					<select class="bp-groups-new-role" <!--name="bp-groups-added-role[]"-->>
+					<select class="bp-groups-new-role">
 						<optgroup label="<?php esc_attr_e( 'Roles', 'buddypress' ); ?>">
-							<option class="admin"  value="admin" ><?php esc_html_e( 'Administrator', 'buddypress' ); ?></option>
-							<option class="mod"    value="mod"   ><?php esc_html_e( 'Moderator',     'buddypress' ); ?></option>
+							<option class="admin"  value="admin"          ><?php esc_html_e( 'Administrator', 'buddypress' ); ?></option>
+							<option class="mod"    value="mod"            ><?php esc_html_e( 'Moderator',     'buddypress' ); ?></option>
 							<option class="member" value="member" selected><?php esc_html_e( 'Member',        'buddypress' ); ?></option>
 						</optgroup>
 					</select>
-					<a href="#" class="bp-groups-remove-new-group" data-group-id="">Remove</a>
+					<a href="#" class="bp-groups-remove-new-group" data-group-id=""><?php echo __( 'Remove', 'buddypress' ); ?></a>
 				</td>
 			</tr>
 			<tr id="bp-member-no-new-groups">
 				<td scope="row" class="gid-column" colspan="3">
-					<input id="bp-member-new-group-search" type="text" placeholder="Start typing to get suggestions" style="width: 100%" />
+					<input id="bp-member-new-group-search" type="text" style="width: 100%" />
 				</td>
 			</tr>
 		</tbody>
@@ -1185,7 +1186,7 @@ function bp_groups_admin_edit_metabox_single_user( $user_id, $screen_id ) {
 
 	add_meta_box(
 		'bp_groups_user_groups_' . $user_id,
-		esc_html( __( 'Member in following groups' ) ),
+		esc_html( __( 'Member in following groups', 'buddypress' ) ),
 		'bp_groups_admin_edit_user_current_groups',
 		$screen_id,
 		'normal',
@@ -1195,7 +1196,7 @@ function bp_groups_admin_edit_metabox_single_user( $user_id, $screen_id ) {
 
 	add_meta_box(
 		'bp_groups_user_add_to_groups_' . $user_id,
-		esc_html( __( 'Add user to groups' ) ),
+		esc_html( __( 'Add user to groups', 'buddypress' ) ),
 		'bp_groups_admin_edit_add_user_to_groups',
 		$screen_id,
 		'normal',
