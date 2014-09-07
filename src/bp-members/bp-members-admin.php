@@ -1005,7 +1005,7 @@ class BP_Members_Admin {
 		}
 
 		// Construct URL for form
-		$request_url     = remove_query_arg( array( 'action', 'error', 'updated', 'spam', 'ham' ), $_SERVER['REQUEST_URI'] );
+		$request_url     = remove_query_arg( array( 'action', 'error', 'updated', 'spam', 'ham', 'success_new', 'error_new', 'success_modified', 'error_modified', 'error_modified_last_admin' ), $_SERVER['REQUEST_URI'] );
 		$form_action_url = add_query_arg( 'action', 'update_users_group_membership', $request_url );
 		$wp_http_referer = false;
 		if ( ! empty( $_REQUEST['wp_http_referer'] ) ) {
@@ -1079,8 +1079,6 @@ class BP_Members_Admin {
 
 					</div><!-- #poststuff -->
 
-					<?php wp_nonce_field( 'closedpostboxes', 'closedpostboxesnonce', false ); ?>
-					<?php wp_nonce_field( 'meta-box-order',  'meta-box-order-nonce', false ); ?>
 					<?php wp_nonce_field( 'edit-bp-profile_' . $user->ID ); ?>
 
 				</form>
