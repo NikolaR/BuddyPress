@@ -598,7 +598,11 @@ function groups_get_users_groups( $user_id ) {
 	$groups = array();
 	if ( ! empty( $memberships ) ) {
 		$group_ids = wp_list_pluck( $memberships, 'group_id' );
-		$groups = groups_get_groups( array( 'include' => $group_ids ) );
+		$groups = groups_get_groups( array(
+			'include'     => $group_ids,
+			'show_hidden' => true,
+			'per_page'    => null
+		) );
 	}
 
 	foreach ( $groups['groups'] as $group ) {
